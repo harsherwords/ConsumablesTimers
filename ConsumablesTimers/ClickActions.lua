@@ -76,8 +76,8 @@ function addon.SetItemChoice(spec, kind, choice)
     addon.RebuildDisplay()
 end
 
-function addon.GetBagCount(id)
-    local count = C_Item.GetItemCount(id)
+function addon.GetBagCount(id, includeUses)
+    local count = C_Item.GetItemCount(id, false, includeUses == true)
     if not issecretvalue(count) and type(count) == "number" then
         return count
     end
@@ -161,9 +161,10 @@ function addon.RefreshBagConsumables(level)
     local changed = false
     for kind in pairs(defaults) do
         local best, bestLevel = nil, -1
+        local includeUses = kind == "weapon"
         for _, item in ipairs(bagItems[kind]) do
             local required = item.requiredLevel
-            if required and required <= level and required > bestLevel and addon.GetBagCount(item.id) > 0 then
+            if required and required <= level and required > bestLevel and addon.GetBagCount(item.id, includeUses) > 0 then
                 best, bestLevel = item.id, required
             end
         end

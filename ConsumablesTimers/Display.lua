@@ -251,7 +251,7 @@ function addon.Render(entries, timers, combat, showWarning, previewWarning)
         local row, result = rows[index], timers[entry.key]
         local status, icon, alpha = text.missing, entry.icon, 0.45
         local itemID = entry.click and entry.click.itemID
-        row.itemCount = itemID and addon.GetBagCount(itemID) or 0
+        row.itemCount = itemID and addon.GetBagCount(itemID, entry.click.targetsWeapon) or 0
         if previewWarning and not previewLabel and not entry.useOnly then
             previewLabel = entry.label
         end

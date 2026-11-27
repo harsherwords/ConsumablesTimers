@@ -286,9 +286,12 @@ local function CreateConsumableDropdown(parent, spec, kind, caption, y)
         root:CreateRadio(autoLabel, IsSelected, SelectItem, "auto")
         root:CreateRadio("None", IsSelected, SelectItem, "none")
         local listed = false
+        local includeUses = kind == "weapon"
         for _, item in ipairs(addon.GetBagConsumables(kind)) do
             local details = item.requiredLevel and item.requiredLevel > 0 and ("Requires " .. item.requiredLevel .. ", ") or ""
-            local itemLabel = item.name .. " (" .. details .. addon.GetBagCount(item.id) .. " in bags)"
+            local count = addon.GetBagCount(item.id, includeUses)
+            local unit = includeUses and (count == 1 and " use left" or " uses left") or " in bags"
+            local itemLabel = item.name .. " (" .. details .. count .. unit .. ")"
             root:CreateRadio(itemLabel, IsSelected, SelectItem, item.id)
             listed = listed or selected == item.id
         end

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3
+
+- Show total remaining weapon enhancement uses across bag items in the timer window and Weapon picker.
+
 ## 1.5.2
 
 - Show a color-coded bag count on the Weapon Oil icon for the selected weapon enhancement.
