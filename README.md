@@ -28,7 +28,9 @@ The weapon row displays the longest remaining temporary effect across equipped w
 
 ## Track another buff
 
-Use the spell ID for the **buff aura** that appears on your character. For example, enter `/ct add 429959` to track spell `429959`.
+Open `/ct tracking` to view your added spell IDs. Enter the ID of the **buff aura** that appears on your character and click **Track** or press Enter. Click the **X** next to an ID to remove it.
+
+You can also add an ID from chat. For example, enter `/ct add 429959` to track spell `429959`.
 
 <img src="images/now-tracking-spell-id.png" alt="Chat confirmation that ConsumablesTimers is now tracking spell 429959" width="447">
 
@@ -39,6 +41,7 @@ The custom Well Fed spell (`429959`) gets its own row below the two default time
 | Command | Action |
 | --- | --- |
 | `/ct` | Open settings. |
+| `/ct tracking` | Open the window for adding and removing tracked spell IDs. |
 | `/ct add <spellID>` | Track a buff by its aura spell ID. |
 | `/ct remove <spellID>` | Remove an added buff. |
 | `/ct label <spellID> <text>` | Change an added buff's display label. Omit the text to reset it. |

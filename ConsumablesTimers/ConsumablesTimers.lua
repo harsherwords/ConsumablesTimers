@@ -42,6 +42,13 @@ local function IsSpellID(id)
     return type(id) == "number" and id >= 1 and id <= 2147483647 and id % 1 == 0
 end
 
+function addon.ParseSpellID(text)
+    local id = tonumber(strtrim(text):match("^%d+$"))
+    if IsSpellID(id) then
+        return id
+    end
+end
+
 local function LoadDatabase()
     local db = ApplyDefaults(ConsumablesTimersDB, defaults)
     if not db.missingColor:match("^%x%x%x%x%x%x$") then
@@ -120,6 +127,15 @@ local function DisplayLabel(key, fallback)
     return label ~= "" and label or fallback
 end
 
+function addon.GetTrackedSpellIDs()
+    local ids = {}
+    for id in pairs(addon.db.spells) do
+        ids[#ids + 1] = id
+    end
+    table.sort(ids)
+    return ids
+end
+
 function addon.RebuildDisplay()
     local db = addon.db
     entries = {
@@ -128,12 +144,7 @@ function addon.RebuildDisplay()
             icon = "Interface\\Icons\\INV_Potion_105" },
     }
 
-    local ids = {}
-    for id in pairs(db.spells) do
-        ids[#ids + 1] = id
-    end
-    table.sort(ids)
-    for _, id in ipairs(ids) do
+    for _, id in ipairs(addon.GetTrackedSpellIDs()) do
         local label = db.spells[id]
         if label == "" then
             label = C_Spell.GetSpellName(id) or ("Spell " .. id)
@@ -152,12 +163,36 @@ local function RequestSpell(id)
     end
 end
 
+function addon.SetTrackedSpell(id, track)
+    if addon.IsCombat() then
+        return false, "ConsumablesTimers is locked during combat."
+    end
+    if not IsSpellID(id) then
+        return false, "Enter a valid spell ID."
+    end
+
+    local spells = addon.db.spells
+    local tracked = spells[id] ~= nil
+    if track == tracked then
+        return false, track and "That spell is already tracked." or "That spell is not tracked."
+    end
+
+    spells[id] = track and "" or nil
+    if track then
+        RequestSpell(id)
+    end
+    addon.RebuildDisplay()
+    addon.RefreshTrackingWindow()
+    return true, (track and "Now tracking spell " or "Removed spell ") .. id .. "."
+end
+
 local function Say(text)
     print("|cffefd080ConsumablesTimers|r " .. text)
 end
 
 local function ShowHelp()
     Say("/ct opens settings. /ct list shows tracked buffs.")
+    Say("/ct tracking opens the tracked spell ID window.")
     Say("/ct add <spellID> or /ct remove <spellID> changes tracked buffs.")
     Say("/ct label <spellID|wellfed|weapon> <text> renames a buff. Omit the text to reset it.")
     Say("/ct unlock or /ct lock changes drag access. /ct resetposition restores both positions.")
@@ -184,21 +219,15 @@ local function HandleSlash(message)
     local db = addon.db
     if command == "" or command == "options" then
         addon.OpenOptions()
+    elseif command == "tracking" then
+        addon.OpenTrackingWindow()
     elseif command == "add" or command == "remove" then
-        local id = tonumber(arguments:match("^%d+$"))
-        if not IsSpellID(id) then
+        local id = addon.ParseSpellID(arguments)
+        if not id then
             Say("Usage: /ct " .. command .. " <spellID>")
-        elseif command == "add" and not db.spells[id] then
-            db.spells[id] = ""
-            RequestSpell(id)
-            addon.RebuildDisplay()
-            Say("Now tracking spell " .. id .. ".")
-        elseif command == "remove" and db.spells[id] then
-            db.spells[id] = nil
-            addon.RebuildDisplay()
-            Say("Removed spell " .. id .. ".")
         else
-            Say(command == "add" and "That spell is already tracked." or "That spell is not tracked.")
+            local _, feedback = addon.SetTrackedSpell(id, command == "add")
+            Say(feedback)
         end
     elseif command == "label" then
         local key, label = arguments:match("^(%S+)%s*(.*)$")
@@ -223,6 +252,15 @@ local function HandleSlash(message)
     else
         ShowHelp()
     end
+end
+
+local function UpdateCombatState()
+    if addon.IsCombat() then
+        addon.CloseOptions()
+        addon.CloseTrackingWindow()
+    end
+    addon.UpdateInteraction()
+    addon.Refresh()
 end
 
 local events = CreateFrame("Frame")
@@ -254,21 +292,13 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
     elseif event == "PLAYER_ENTERING_WORLD" then
         enteredWorld = true
         inCombat = InCombatLockdown()
-        if inCombat then
-            addon.CloseOptions()
-        end
-        addon.UpdateInteraction()
-        addon.Refresh()
+        UpdateCombatState()
     elseif event == "PLAYER_LEAVING_WORLD" then
         enteredWorld = false
         addon.HideDisplay()
     elseif event == "PLAYER_REGEN_DISABLED" or event == "PLAYER_REGEN_ENABLED" then
         inCombat = event == "PLAYER_REGEN_DISABLED"
-        if inCombat then
-            addon.CloseOptions()
-        end
-        addon.UpdateInteraction()
-        addon.Refresh()
+        UpdateCombatState()
     elseif event == "SPELL_DATA_LOAD_RESULT" then
         if arg2 and addon.db.spells[arg1] then
             addon.RebuildDisplay()

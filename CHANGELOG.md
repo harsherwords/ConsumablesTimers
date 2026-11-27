@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+
+- Add `/ct tracking` to list, add, and remove extra tracked spell IDs in one window.
+
 ## 1.1.0
 
 - Show missing timer text in red by default, with preset color swatches, a color picker, and a hex field.

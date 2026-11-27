@@ -42,7 +42,7 @@ local function EditBox(x, y, width, maxLetters)
     return edit
 end
 
-local function Button(parent, text, width)
+function addon.CreateOptionsButton(parent, text, width)
     local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
     button:SetSize(width, 24)
     button:SetText(text)
@@ -104,7 +104,7 @@ local function AddMissingColorOptions(y)
         missingColorSwatches[hex] = border
     end
 
-    local pickerButton = Button(content, "Color picker", 87)
+    local pickerButton = addon.CreateOptionsButton(content, "Color picker", 87)
     pickerButton:SetPoint("TOPLEFT", 289, -y)
     pickerButton:SetScript("OnClick", OpenMissingColorPicker)
     missingColorInput = EditBox(384, y, 68, 7)
@@ -239,7 +239,7 @@ local function AddTextOptions()
         local y = 546 + (index - 1) * 32
         Label(name, 12, y + 5)
         local inputs = {}
-        inputs.font = Button(content, "", 126)
+        inputs.font = addon.CreateOptionsButton(content, "", 126)
         inputs.font:SetPoint("TOPLEFT", 101, -y)
         inputs.font:SetScript("OnClick", function(self)
             if not addon.IsCombat() then
@@ -255,28 +255,34 @@ local function AddTextOptions()
     Label("Change added spell labels with /ct label <spellID> <text>.", 12, 687)
 end
 
+function addon.CreateOptionsWindow(name, caption, width, height)
+    local window = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
+    window:SetPoint("CENTER")
+    window:SetSize(width, height)
+    window:SetFrameStrata("DIALOG")
+    window:EnableMouse(true)
+    window:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+    window:SetBackdropColor(0.07, 0.08, 0.1, 0.98)
+    window:SetBackdropBorderColor(0.42, 0.44, 0.50, 1)
+    window:Hide()
+    table.insert(UISpecialFrames, name)
+
+    local close = CreateFrame("Button", nil, window, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", -4, -4)
+    local title = window:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -14)
+    title:SetText(caption)
+    return window
+end
+
 function addon.OpenOptions()
     if addon.IsCombat() then
         return
     end
+    addon.CloseTrackingWindow()
     if not panel then
-        panel = CreateFrame("Frame", "ConsumablesTimersOptions", UIParent, "BackdropTemplate")
-        panel:SetPoint("CENTER")
-        panel:SetSize(530, 545)
-        panel:SetFrameStrata("DIALOG")
-        panel:EnableMouse(true)
-        panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-        panel:SetBackdropColor(0.07, 0.08, 0.1, 0.98)
-        panel:SetBackdropBorderColor(0.42, 0.44, 0.50, 1)
-        panel:Hide()
-        table.insert(UISpecialFrames, panel:GetName())
-
-        local close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
-        close:SetPoint("TOPRIGHT", -4, -4)
-        local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-        title:SetPoint("TOPLEFT", 16, -14)
-        title:SetText("ConsumablesTimers")
+        panel = addon.CreateOptionsWindow("ConsumablesTimersOptions", "ConsumablesTimers", 530, 545)
 
         local scroll = CreateFrame("ScrollFrame", "ConsumablesTimersOptionsScroll", panel, "UIPanelScrollFrameTemplate")
         scroll:SetPoint("TOPLEFT", 13, -43)
@@ -287,7 +293,7 @@ function addon.OpenOptions()
         AddBehaviorOptions()
         AddTextOptions()
 
-        local apply = Button(panel, "Apply text settings", 140)
+        local apply = addon.CreateOptionsButton(panel, "Apply text settings", 140)
         apply:SetPoint("BOTTOMRIGHT", -13, 14)
         apply:SetScript("OnClick", ApplyText)
         status = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
