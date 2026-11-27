@@ -142,29 +142,52 @@ local weaponSlots = { Enum.WeaponSlot.MainHand, Enum.WeaponSlot.OffHand, Enum.We
 local temporary = Enum.ItemEnchantType.Temporary
 local imbue = Enum.ItemEnchantType.Imbue
 
+local stoneNamesByEnchant = {
+    [1803] = "Firestone", [1823] = "Firestone", [1824] = "Firestone", [1825] = "Firestone",
+    [8059] = "Spellstone", [8060] = "Spellstone", [8061] = "Spellstone",
+}
+local stoneNamesByIcon = { [134085] = "Firestone", [134131] = "Spellstone" }
+
+local function ReadWeaponTimer(enchant, kind)
+    local milliseconds = enchant.timeLeft
+    if not IsPublic(milliseconds) then
+        return unavailable
+    end
+    if type(milliseconds) ~= "number" or milliseconds <= 0 then
+        return
+    end
+    local icon = enchant.enchantIconID
+    if not IsPublic(icon) or icon == 0 then
+        icon = nil
+    end
+    local label
+    if kind == imbue then
+        local id = enchant.enchantID
+        label = (IsPublic(id) and stoneNamesByEnchant[id]) or stoneNamesByIcon[icon]
+    end
+    return { remaining = milliseconds / 1000, icon = icon, name = label }
+end
+
 function addon.ReadWeapon()
-    local best
+    local oilTimer, imbueTimer
     for _, slot in ipairs(weaponSlots) do
         local ok, enchants = pcall(C_Item.GetWeaponEnchantInfo, slot)
         if ok and IsPublic(enchants) and type(enchants) == "table" then
             for _, enchant in ipairs(enchants) do
                 if not IsPublic(enchant) or not IsPublic(enchant.hasEnchant) or not IsPublic(enchant.enchantType) then
-                    best = best or unavailable
-                elseif enchant.hasEnchant and (enchant.enchantType == temporary or enchant.enchantType == imbue) then
-                    local milliseconds, icon = enchant.timeLeft, enchant.enchantIconID
-                    if not IsPublic(milliseconds) then
-                        best = best or unavailable
-                    elseif type(milliseconds) == "number" and milliseconds > 0 then
-                        if not IsPublic(icon) or icon == 0 then
-                            icon = nil
-                        end
-                        best = Later(best, { remaining = milliseconds / 1000, icon = icon })
+                    oilTimer, imbueTimer = oilTimer or unavailable, imbueTimer or unavailable
+                elseif enchant.hasEnchant then
+                    local kind = enchant.enchantType
+                    if kind == temporary then
+                        oilTimer = Later(oilTimer, ReadWeaponTimer(enchant, kind))
+                    elseif kind == imbue then
+                        imbueTimer = Later(imbueTimer, ReadWeaponTimer(enchant, kind))
                     end
                 end
             end
         else
-            best = best or unavailable
+            oilTimer, imbueTimer = oilTimer or unavailable, imbueTimer or unavailable
         end
     end
-    return best
+    return oilTimer, imbueTimer
 end

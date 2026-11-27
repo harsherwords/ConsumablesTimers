@@ -250,6 +250,9 @@ function addon.Render(entries, timers, combat, showWarning, previewWarning)
     for index, entry in ipairs(entries) do
         local row, result = rows[index], timers[entry.key]
         local status, icon, alpha = text.missing, entry.icon, 0.45
+        if entry.useResultName then
+            row.label:SetText(result and result.name or entry.label)
+        end
         local itemID = entry.click and entry.click.itemID
         row.itemCount = itemID and addon.GetBagCount(itemID, entry.click.targetsWeapon) or 0
         if previewWarning and not previewLabel and not entry.useOnly then

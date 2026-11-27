@@ -194,7 +194,7 @@ local function AddBehaviorOptions()
         { "disableRaid", "Disable in raids" },
         { "locked", "Lock timer and warning positions" },
         { "showLabels", "Show buff names beside the icons" },
-        { "hideDefaultBuffs", "Hide the default Well Fed and Weapon Oil trackers" },
+        { "hideDefaultBuffs", "Hide the default consumable trackers" },
     }
     for index, setting in ipairs(settings) do
         local key, name = unpack(setting)
@@ -224,7 +224,7 @@ local function AddTextOptions()
         { "missing", "Missing timer" }, { "active", "Timer with no expiry" },
         { "unavailable", "Unavailable timer" }, { "inCombat", "Unavailable in combat" },
         { "warning", "Warning message (%s = buff names)" },
-        { "flask", "Flask label" },
+        { "flask", "Flask label" }, { "imbue", "Weapon imbue label" },
     }
     for index, field in ipairs(fields) do
         local key, name = unpack(field)
@@ -234,7 +234,7 @@ local function AddTextOptions()
     end
     AddMissingColorOptions(364 + offset)
 
-    offset = offset + 30
+    offset = offset + 60
     Label("Text appearance", 10, 529 + offset, "GameFontNormal")
     Label("Font", 104, 555 + offset)
     Label("Size", 252, 555 + offset)
@@ -397,7 +397,7 @@ function addon.OpenOptions()
         scroll:SetPoint("TOPLEFT", 13, -74)
         scroll:SetPoint("BOTTOMRIGHT", -30, 51)
         content = CreateFrame("Frame", nil, scroll)
-        content:SetSize(485, 800)
+        content:SetSize(485, 830)
         scroll:SetScrollChild(content)
         AddBehaviorOptions()
         AddTextOptions()

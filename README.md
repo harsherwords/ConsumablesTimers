@@ -21,7 +21,9 @@ A compact timer and click-to-use window for **World of Warcraft: Forever**. Keep
 
 ## Track buffs
 
-**Well Fed** and **Weapon Oil** are tracked by default under **Consumables**. The weapon timer shows the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues.
+**Well Fed** and **Weapon Oil** are tracked by default under **Consumables**. Weapon Oil covers temporary enhancements such as oils, sharpening stones, and weightstones.
+
+**Weapon Imbue** has its own timer for Warlock Firestones and Spellstones, Rogue poisons, and Shaman imbues. The row also appears for other classes when the game reports an imbue. Each weapon timer shows the longest remaining effect of its type across equipped weapons.
 
 1. Open `/ct tracking` or choose **Tracking** in `/ct`.
 2. Under **Active buffs**, choose a category and click the green checkmark next to a faded row. To add a buff by ID, enter its **aura spell ID**, choose a category, and click **Track** or press Enter. For example, Well-Rested is `429959`.
@@ -54,7 +56,7 @@ Food and weapon counts are **green** at 21 or more, **yellow** at 2–20, and **
 
 Open `/ct` → **General** to adjust the timer window.
 
-- **Visibility** can be limited to out-of-combat play. You can also hide the default Well Fed and Weapon Oil rows or mute the addon independently in the world, dungeons, and raids.
+- **Visibility** can be limited to out-of-combat play. You can also hide the default Well Fed, Weapon Oil, and Weapon Imbue rows or mute the addon independently in the world, dungeons, and raids.
 - **Missing-buff warnings** can display a large message outside combat. The **Missing** timer text starts red. Pick a swatch, use the color picker, or enter a hex code to change it.
 - **Display text** lets you edit the title, labels, status and warning wording, and text appearance. Click **Apply text settings** to save.
 - **Positioning** uses the padlock in the upper-right corner of the timer window. Unlock it to drag the timer or warning and lock it again to enable icon clicks.

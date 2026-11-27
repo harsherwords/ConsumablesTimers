@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.5
+
+- Track weapon imbues independently of oils and other temporary weapon enhancements. The new row appears by default for Warlocks, Rogues, and Shamans and is also enabled when the game reports an imbue on another class.
+- Show the active Firestone or Spellstone name when buff names are enabled.
+
 ## 1.5.4
 
 - Add a **Tracking** tab in `/ct` and a **Config** button in the tracking window for switching between them.

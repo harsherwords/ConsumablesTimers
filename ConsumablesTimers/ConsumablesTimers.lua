@@ -24,6 +24,7 @@ local defaults = {
     warningPosition = { x = 0, y = 190 },
     text = {
         title = "Consumables", wellfed = "Well Fed", weapon = "Weapon Oil", flask = "Flask",
+        imbue = "Weapon Imbue",
         missing = "Missing", active = "Active", unavailable = "Unavailable", inCombat = "In Combat",
         warning = "Missing: %s",
     },
@@ -101,6 +102,9 @@ end
 local inCombat, enteredWorld
 local entries = {}
 local displaySpec
+local observedWeaponImbue
+local classImbueSpells = { WARLOCK = 1237152, SHAMAN = 8017, ROGUE = 8679 }
+local classImbueSpell
 
 function addon.GetSpellCategory(id)
     return addon.db.spellCategories[id] or "personal"
@@ -160,7 +164,13 @@ function addon.Refresh()
     end
     local food, timers = addon.ReadAuras(db.spells, GetTime())
     if not db.hideDefaultBuffs then
-        timers.wellfed, timers.weapon = food, addon.ReadWeapon()
+        timers.wellfed = food
+        timers.weapon, timers.imbue = addon.ReadWeapon()
+        if timers.imbue and timers.imbue ~= addon.unavailable and not (classImbueSpell or observedWeaponImbue) then
+            observedWeaponImbue = true
+            addon.RebuildDisplay()
+            return
+        end
     end
     local showWarning = db.warn and not combat
     local previewWarning = showWarning and not db.locked and addon.OptionsShown()
@@ -194,6 +204,11 @@ function addon.RebuildDisplay()
             click = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "food")) }
         consumables[2] = { key = "weapon", label = DisplayLabel("weapon", defaults.text.weapon),
             icon = "Interface\\Icons\\INV_Potion_105", click = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "weapon"), true) }
+        if classImbueSpell or observedWeaponImbue then
+            local label = DisplayLabel("imbue", defaults.text.imbue)
+            consumables[3] = { key = "imbue", label = label, useResultName = label == defaults.text.imbue,
+                icon = classImbueSpell and addon.GetSpellIcon(classImbueSpell) or "Interface\\Icons\\INV_Enchant_DustStrange" }
+        end
     end
     local flask = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "flask"))
     if flask then
@@ -354,6 +369,7 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         self:UnregisterEvent(event)
         LoadDatabase()
         addon.LoadClickSettings()
+        classImbueSpell = classImbueSpells[select(2, UnitClass("player"))]
         addon.CreateDisplay()
         addon.RebuildDisplay()
 
