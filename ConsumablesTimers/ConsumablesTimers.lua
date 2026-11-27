@@ -193,7 +193,7 @@ function addon.RebuildDisplay()
         consumables[1] = { key = "wellfed", label = DisplayLabel("wellfed", defaults.text.wellfed), icon = 136000,
             click = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "food")) }
         consumables[2] = { key = "weapon", label = DisplayLabel("weapon", defaults.text.weapon),
-            icon = "Interface\\Icons\\INV_Potion_105" }
+            icon = "Interface\\Icons\\INV_Potion_105", click = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "weapon"), true) }
     end
     local flask = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "flask"))
     if flask then
@@ -339,6 +339,7 @@ local function UpdateCombatState()
         addon.UpdateInteraction()
         addon.Refresh()
     else
+        addon.RefreshBagConsumables()
         addon.RebuildDisplay()
     end
 end
@@ -363,7 +364,7 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         for _, refreshEvent in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "ZONE_CHANGED_NEW_AREA",
             "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_EQUIPMENT_CHANGED", "SPELL_DATA_LOAD_RESULT",
             "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_TALENT_UPDATE", "SPELLS_CHANGED", "BAG_UPDATE_DELAYED",
-            "ITEM_DATA_LOAD_RESULT" }) do
+            "ITEM_DATA_LOAD_RESULT", "PLAYER_LEVEL_UP" }) do
             self:RegisterEvent(refreshEvent)
         end
         self:RegisterUnitEvent("UNIT_AURA", "player")
@@ -391,9 +392,14 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
             addon.RebuildDisplay()
             addon.RefreshClickOptions()
         end
-    elseif event == "BAG_UPDATE_DELAYED" or event == "ITEM_DATA_LOAD_RESULT" then
+    elseif event == "BAG_UPDATE_DELAYED" or event == "PLAYER_LEVEL_UP"
+        or (event == "ITEM_DATA_LOAD_RESULT" and arg2 and addon.IsRequestedItem(arg1)) then
+        if enteredWorld and not addon.IsCombat() and addon.RefreshBagConsumables(event == "PLAYER_LEVEL_UP" and arg1 or nil) then
+            addon.RebuildDisplay()
+        else
+            addon.Refresh()
+        end
         addon.RefreshClickOptions()
-        addon.Refresh()
     else
         addon.Refresh()
     end

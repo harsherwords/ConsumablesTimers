@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.0
+
+- Add per-spec weapon enhancements to **On-Click Settings**, with main-hand and off-hand clicks on the weapon timer icon.
+- Default food and flask shortcuts to the highest usable Required Level in the bags and update the selection as inventory changes.
+
 ## 1.4.0
 
 - Group timers into Consumables, Party & Raid, and Personal, with a category dropdown in `/ct tracking`.

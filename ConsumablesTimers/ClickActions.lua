@@ -3,13 +3,20 @@ local _, addon = ...
 local characterSettings
 local requestedItems = {}
 local consumableSubclasses = Enum.ItemConsumableSubclass
+local defaults = { food = "auto", flask = "auto", weapon = "none" }
+local bagItems = { food = {}, flask = {}, weapon = {} }
+local autoItems = {}
+
+local function IsItemChoice(kind, choice)
+    return choice == "none" or (choice == "auto" and defaults[kind] == "auto") or addon.IsSpellID(choice)
+end
 
 function addon.LoadClickSettings()
     characterSettings = type(ConsumablesTimersCharacterDB) == "table" and ConsumablesTimersCharacterDB or {}
     for spec = 1, 2 do
         local choices = type(characterSettings[spec]) == "table" and characterSettings[spec] or {}
-        for _, kind in ipairs({ "food", "flask" }) do
-            if not addon.IsSpellID(choices[kind]) then
+        for kind in pairs(defaults) do
+            if not IsItemChoice(kind, choices[kind]) then
                 choices[kind] = nil
             end
         end
@@ -26,18 +33,32 @@ function addon.GetActiveSpec()
     return C_SpecializationInfo.GetActiveSpecGroup() == 2 and 2 or 1
 end
 
-function addon.GetSelectedItem(spec, kind)
-    return characterSettings[spec][kind]
+function addon.GetItemChoice(spec, kind)
+    return characterSettings[spec][kind] or defaults[kind]
 end
 
-function addon.SetSelectedItem(spec, kind, id)
-    if addon.IsCombat() or (spec == 2 and not addon.HasSecondarySpec()) or (id and not addon.IsSpellID(id)) then
+function addon.GetSelectedItem(spec, kind)
+    local choice = addon.GetItemChoice(spec, kind)
+    if choice == "auto" then
+        return autoItems[kind]
+    end
+    if choice ~= "none" then
+        return choice
+    end
+end
+
+function addon.GetAutomaticItem(kind)
+    return autoItems[kind]
+end
+
+function addon.SetItemChoice(spec, kind, choice)
+    if addon.IsCombat() or (spec == 2 and not addon.HasSecondarySpec()) or not IsItemChoice(kind, choice) then
         return
     end
-    if characterSettings[spec][kind] == id then
+    if addon.GetItemChoice(spec, kind) == choice then
         return
     end
-    characterSettings[spec][kind] = id
+    characterSettings[spec][kind] = choice
     addon.RebuildDisplay()
 end
 
@@ -49,16 +70,21 @@ function addon.GetBagCount(id)
     return 0
 end
 
-function addon.GetConsumableName(id)
-    local name = C_Item.GetItemNameByID(id)
-    if name and name ~= "" then
-        return name
-    end
-    if not requestedItems[id] then
+local function GetConsumableInfo(id)
+    local name, _, _, _, requiredLevel = C_Item.GetItemInfo(id)
+    if (not name or requiredLevel == nil) and not requestedItems[id] then
         requestedItems[id] = true
         C_Item.RequestLoadItemDataByID(id)
     end
-    return "Item " .. id
+    return name and name ~= "" and name or ("Item " .. id), requiredLevel
+end
+
+function addon.GetConsumableName(id)
+    return (GetConsumableInfo(id))
+end
+
+function addon.IsRequestedItem(id)
+    return requestedItems[id] == true
 end
 
 local function GetConsumableKind(id, drinkName)
@@ -69,6 +95,9 @@ local function GetConsumableKind(id, drinkName)
     if subclassID == consumableSubclasses.Flasksphials then
         return "flask"
     end
+    if subclassID == consumableSubclasses.ItemenhancementTemporary then
+        return "weapon"
+    end
     if subclassID == consumableSubclasses.Fooddrink then
         local spellName, spellID = C_Item.GetItemSpell(id)
         if spellID ~= 430 and (not drinkName or spellName ~= drinkName) then
@@ -77,8 +106,8 @@ local function GetConsumableKind(id, drinkName)
     end
 end
 
-function addon.ScanBagConsumables()
-    local choices = { food = {}, flask = {} }
+local function ScanBagConsumables()
+    local choices = { food = {}, flask = {}, weapon = {} }
     local seen = {}
     local drinkName = C_Spell.GetSpellName(430)
     for bag = Enum.BagIndex.Backpack, Enum.BagIndex.ReagentBag do
@@ -88,8 +117,9 @@ function addon.ScanBagConsumables()
                 seen[id] = true
                 local kind = GetConsumableKind(id, drinkName)
                 if kind then
+                    local name, requiredLevel = GetConsumableInfo(id)
                     local items = choices[kind]
-                    items[#items + 1] = { id = id, name = addon.GetConsumableName(id) }
+                    items[#items + 1] = { id = id, name = name, requiredLevel = requiredLevel }
                 end
             end
         end
@@ -105,10 +135,35 @@ function addon.ScanBagConsumables()
     return choices
 end
 
-function addon.GetItemClick(id)
+function addon.RefreshBagConsumables(level)
+    bagItems = ScanBagConsumables()
+    level = level or UnitLevel("player")
+    if issecretvalue(level) or type(level) ~= "number" then
+        level = 0
+    end
+    local changed = false
+    for _, kind in ipairs({ "food", "flask" }) do
+        local best, bestLevel = nil, -1
+        for _, item in ipairs(bagItems[kind]) do
+            local required = item.requiredLevel
+            if required and required <= level and required > bestLevel and addon.GetBagCount(item.id) > 0 then
+                best, bestLevel = item.id, required
+            end
+        end
+        changed = changed or best ~= autoItems[kind]
+        autoItems[kind] = best
+    end
+    return changed
+end
+
+function addon.GetBagConsumables(kind)
+    return bagItems[kind]
+end
+
+function addon.GetItemClick(id, targetsWeapon)
     if id then
         local _, _, _, _, icon = C_Item.GetItemInfoInstant(id)
-        return { itemID = id, icon = icon ~= 0 and icon or nil }
+        return { itemID = id, icon = icon ~= 0 and icon or nil, targetsWeapon = targetsWeapon }
     end
 end
 
@@ -133,6 +188,9 @@ local function CreateActionButton(row)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         if self.itemID then
             GameTooltip:SetItemByID(self.itemID)
+            if self.targetsWeapon then
+                GameTooltip:AddLine("Left-click to apply to main hand. Right-click to apply to off hand.", 1, 1, 1, true)
+            end
         else
             GameTooltip:SetSpellByID(self.spellID)
         end
@@ -159,12 +217,26 @@ function addon.UpdateRowClick(row, click, enabled)
         button = CreateActionButton(row)
         row.action = button
     end
-    if button.itemID ~= click.itemID or button.spellID ~= click.spellID then
+    if button.itemID ~= click.itemID or button.spellID ~= click.spellID or button.targetsWeapon ~= click.targetsWeapon then
         button:SetAttribute("type1", click.itemID and "item" or "spell")
         button:SetAttribute("item1", click.itemID and "item:" .. click.itemID or nil)
         button:SetAttribute("spell1", click.spellID)
         button:SetAttribute("unit", click.spellID and "player" or nil)
+        if click.targetsWeapon then
+            button:RegisterForClicks("LeftButtonDown", "LeftButtonUp", "RightButtonDown", "RightButtonUp")
+            button:SetAttribute("target-slot1", INVSLOT_MAINHAND or 16)
+            button:SetAttribute("type2", "item")
+            button:SetAttribute("item2", "item:" .. click.itemID)
+            button:SetAttribute("target-slot2", INVSLOT_OFFHAND or 17)
+        else
+            button:RegisterForClicks("LeftButtonDown", "LeftButtonUp")
+            button:SetAttribute("target-slot1", nil)
+            button:SetAttribute("type2", nil)
+            button:SetAttribute("item2", nil)
+            button:SetAttribute("target-slot2", nil)
+        end
         button.itemID, button.spellID = click.itemID, click.spellID
+        button.targetsWeapon = click.targetsWeapon
     end
     button:Show()
 end

@@ -2,7 +2,7 @@
 ## AllowLoadGameType: camelot
 ## Title: ConsumablesTimers
 ## Notes: Timers for food buffs, temporary weapon effects, and other player buffs.
-## Version: 1.4.0
+## Version: 1.5.0
 ## SavedVariables: ConsumablesTimersDB
 ## SavedVariablesPerCharacter: ConsumablesTimersCharacterDB
 

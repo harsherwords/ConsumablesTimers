@@ -6,7 +6,6 @@ local missingColorInput, pickerCallback
 local missingColorSwatches = {}
 local clickOptions
 local specSections = {}
-local bagItems = { food = {}, flask = {} }
 
 local function ParseHexColor(text)
     return strtrim(text):upper():match("^#?(%x%x%x%x%x%x)$")
@@ -263,33 +262,39 @@ local function AddTextOptions()
     Label("Change added spell labels with /ct label <spellID> <text>.", 12, 717 + offset)
 end
 
-local function CreateConsumableDropdown(parent, spec, kind, y)
+local function CreateConsumableDropdown(parent, spec, kind, caption, y)
     local label = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     label:SetPoint("TOPLEFT", 8, -y - 5)
-    label:SetText(kind == "food" and "Food" or "Flask")
+    label:SetText(caption)
 
     local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
     dropdown:SetPoint("TOPLEFT", 78, -y)
     dropdown:SetSize(310, 24)
     dropdown:SetDefaultText("None")
     dropdown:SetupMenu(function(_, root)
-        local selected = addon.GetSelectedItem(spec, kind) or 0
-        local function IsSelected(id)
-            return (addon.GetSelectedItem(spec, kind) or 0) == id
+        local selected = addon.GetItemChoice(spec, kind)
+        local function IsSelected(choice)
+            return addon.GetItemChoice(spec, kind) == choice
         end
-        local function SelectItem(id)
-            addon.SetSelectedItem(spec, kind, id ~= 0 and id or nil)
+        local function SelectItem(choice)
+            addon.SetItemChoice(spec, kind, choice)
         end
 
         root:SetScrollMode(260)
-        root:CreateRadio("None", IsSelected, SelectItem, 0)
+        if kind ~= "weapon" then
+            local id = addon.GetAutomaticItem(kind)
+            local autoLabel = id and ("Auto - " .. addon.GetConsumableName(id)) or "Auto (highest required level)"
+            root:CreateRadio(autoLabel, IsSelected, SelectItem, "auto")
+        end
+        root:CreateRadio("None", IsSelected, SelectItem, "none")
         local listed = false
-        for _, item in ipairs(bagItems[kind]) do
-            local caption = item.name .. " (" .. addon.GetBagCount(item.id) .. ")"
-            root:CreateRadio(caption, IsSelected, SelectItem, item.id)
+        for _, item in ipairs(addon.GetBagConsumables(kind)) do
+            local details = item.requiredLevel and item.requiredLevel > 0 and ("Requires " .. item.requiredLevel .. ", ") or ""
+            local itemLabel = item.name .. " (" .. details .. addon.GetBagCount(item.id) .. " in bags)"
+            root:CreateRadio(itemLabel, IsSelected, SelectItem, item.id)
             listed = listed or selected == item.id
         end
-        if selected ~= 0 and not listed then
+        if type(selected) == "number" and not listed then
             root:CreateRadio(addon.GetConsumableName(selected) .. " (out of bags)", IsSelected, SelectItem, selected)
         end
     end)
@@ -304,16 +309,17 @@ local function BuildClickOptions()
     instructions:SetPoint("TOPLEFT", 8, -4)
     instructions:SetPoint("TOPRIGHT", -8, -4)
     instructions:SetJustifyH("LEFT")
-    instructions:SetText("Choose consumables from your bags. Lock the timer window to click items or cast known helpful spells on yourself outside combat.")
+    instructions:SetText("Auto picks the food and flask with the highest Required Level you can use. Lock the timer window to click items or cast known helpful spells on yourself outside combat.")
 
     for spec = 1, 2 do
         local section = CreateFrame("Frame", nil, clickOptions)
-        section:SetPoint("TOPLEFT", 0, -49 - (spec - 1) * 112)
-        section:SetSize(470, 100)
+        section:SetPoint("TOPLEFT", 0, -60 - (spec - 1) * 142)
+        section:SetSize(470, 130)
         section.header = section:CreateFontString(nil, "ARTWORK", "GameFontNormal")
         section.header:SetPoint("TOPLEFT", 8, 0)
-        section.food = CreateConsumableDropdown(section, spec, "food", 24)
-        section.flask = CreateConsumableDropdown(section, spec, "flask", 57)
+        section.food = CreateConsumableDropdown(section, spec, "food", "Food", 24)
+        section.flask = CreateConsumableDropdown(section, spec, "flask", "Flask", 57)
+        section.weapon = CreateConsumableDropdown(section, spec, "weapon", "Weapon", 90)
         specSections[spec] = section
     end
     clickOptions:SetScript("OnShow", addon.RefreshClickOptions)
@@ -321,6 +327,7 @@ local function BuildClickOptions()
         for _, section in ipairs(specSections) do
             section.food:CloseMenu()
             section.flask:CloseMenu()
+            section.weapon:CloseMenu()
         end
     end)
     clickOptions:Hide()
@@ -330,7 +337,6 @@ function addon.RefreshClickOptions()
     if not clickOptions or not clickOptions:IsVisible() or addon.IsCombat() then
         return
     end
-    bagItems = addon.ScanBagConsumables()
     local activeSpec = addon.GetActiveSpec()
     for spec, section in ipairs(specSections) do
         local visible = spec == 1 or addon.HasSecondarySpec()
@@ -340,6 +346,7 @@ function addon.RefreshClickOptions()
             section.header:SetText(activeSpec == spec and title .. " (active)" or title)
             section.food:GenerateMenu()
             section.flask:GenerateMenu()
+            section.weapon:GenerateMenu()
         end
     end
 end

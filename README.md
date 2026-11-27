@@ -60,8 +60,8 @@ Well-Rested (`429959`) gets its own row below the two default timers.
 
 ## Click items and spells
 
-1. Open `/ct` and choose **On-Click Settings**. Pick food and, optionally, a flask from the items in your bags.
-2. Set your **Primary spec** choices. A **Secondary spec** section appears after you purchase it. The addon saves each spec's choices for this character.
-3. Lock the timer window. Outside combat, click the Well Fed icon to use the selected food, the optional Flask icon to use the selected flask, or a known, non-passive helpful spell's icon to cast that spell on yourself.
+1. Open `/ct` and choose **On-Click Settings**. **Auto** picks the food and flask in your bags with the highest **Required Level** you meet. Pick a specific item to override Auto, or choose **None** to disable that shortcut.
+2. Set your **Primary spec** choices, including the oil, sharpening stone, or other temporary enhancement in the **Weapon** picker. A **Secondary spec** section appears after you purchase it. The addon saves each spec's choices for this character.
+3. Lock the timer window. Outside combat, click the Well Fed or Flask icon to use the item, or click a known, non-passive helpful spell to cast it on yourself. Left-click the Weapon Oil icon for your main hand and right-click it for your off hand.
 
 The food icon shows the total left in your bags. The count is green at 21 or more, yellow at 2–20, and red at 0–1. The Flask row shows how many of the selected flask you have. To track a flask buff's duration, add its aura spell ID in `/ct tracking`.
