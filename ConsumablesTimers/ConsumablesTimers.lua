@@ -39,13 +39,13 @@ local function ApplyDefaults(saved, source)
     return saved
 end
 
-local function IsSpellID(id)
+function addon.IsSpellID(id)
     return type(id) == "number" and id >= 1 and id <= 2147483647 and id % 1 == 0
 end
 
 function addon.ParseSpellID(text)
     local id = tonumber(strtrim(text):match("^%d+$"))
-    if IsSpellID(id) then
+    if addon.IsSpellID(id) then
         return id
     end
 end
@@ -71,7 +71,7 @@ local function LoadDatabase()
     local spells = {}
     for key, label in pairs(db.spells) do
         local id = tonumber(key)
-        if IsSpellID(id) and type(label) == "string" then
+        if addon.IsSpellID(id) and type(label) == "string" then
             spells[id] = label
         end
     end
@@ -173,7 +173,7 @@ function addon.SetTrackedSpell(id, track)
     if addon.IsCombat() then
         return false, "ConsumablesTimers is locked during combat."
     end
-    if not IsSpellID(id) then
+    if not addon.IsSpellID(id) then
         return false, "Enter a valid spell ID."
     end
 
@@ -250,7 +250,7 @@ local function HandleSlash(message)
             db.text[key] = label ~= "" and label or defaults.text[key]
             addon.CloseOptions()
             addon.RebuildDisplay()
-        elseif IsSpellID(tonumber(key)) and db.spells[tonumber(key)] then
+        elseif addon.IsSpellID(tonumber(key)) and db.spells[tonumber(key)] then
             db.spells[tonumber(key)] = label
             addon.RebuildDisplay()
         else

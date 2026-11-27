@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+
+- Show currently active buffs as faded rows in `/ct tracking` and add them with a green checkmark.
+
 ## 1.2.3
 
 - Show **In Combat** on timers whose data is restricted during combat, with customizable wording under **Display text**.

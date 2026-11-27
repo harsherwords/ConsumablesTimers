@@ -1,14 +1,28 @@
 local _, addon = ...
 
 local window, scroll, list, emptyText, input, feedback
+local activeHeading, activeEmptyText
 local rows = {}
 local rowHeight = 28
 
-local function CreateRow(index)
+local function RevealTrackedSpell(id)
+    for index, trackedID in ipairs(addon.GetTrackedSpellIDs()) do
+        if trackedID == id then
+            local rowTop = (index - 1) * rowHeight
+            local visibleTop = scroll:GetVerticalScroll()
+            local visibleHeight = scroll:GetHeight()
+            if rowTop < visibleTop then
+                scroll:SetVerticalScroll(rowTop)
+            elseif rowTop + rowHeight > visibleTop + visibleHeight then
+                scroll:SetVerticalScroll(rowTop + rowHeight - visibleHeight)
+            end
+            return
+        end
+    end
+end
+
+local function CreateRow()
     local row = CreateFrame("Frame", nil, list)
-    local y = -(index - 1) * rowHeight
-    row:SetPoint("TOPLEFT", 0, y)
-    row:SetPoint("TOPRIGHT", 0, y)
     row:SetHeight(rowHeight)
 
     row.icon = row:CreateTexture(nil, "ARTWORK")
@@ -18,8 +32,22 @@ local function CreateRow(index)
 
     row.remove = addon.CreateOptionsButton(row, "X", 28)
     row.remove:SetPoint("RIGHT", -4, 0)
-    row.remove:SetScript("OnClick", function(self)
-        local _, message = addon.SetTrackedSpell(self.spellID, false)
+    row.remove:SetScript("OnClick", function()
+        local _, message = addon.SetTrackedSpell(row.spellID, false)
+        feedback:SetText(message)
+    end)
+
+    row.add = CreateFrame("Button", nil, row)
+    row.add:SetPoint("CENTER", row.remove, "CENTER")
+    row.add:SetSize(24, 24)
+    row.add:SetNormalTexture("Interface\\RaidFrame\\ReadyCheck-Ready")
+    row.add:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    row.add:SetScript("OnClick", function()
+        local id = row.spellID
+        local changed, message = addon.SetTrackedSpell(id, true)
+        if changed then
+            RevealTrackedSpell(id)
+        end
         feedback:SetText(message)
     end)
 
@@ -36,26 +64,55 @@ local function CreateRow(index)
     return row
 end
 
+local function ShowSpellRow(index, top, id, activeBuff)
+    local row = rows[index] or CreateRow()
+    rows[index] = row
+    row.spellID = id
+    row:ClearAllPoints()
+    row:SetPoint("TOPLEFT", 0, -top)
+    row:SetPoint("TOPRIGHT", 0, -top)
+
+    local alpha = activeBuff and 0.55 or 1
+    row.icon:SetTexture(activeBuff and activeBuff.icon or addon.GetSpellIcon(id))
+    row.icon:SetAlpha(alpha)
+    row.nameText:SetText(activeBuff and activeBuff.name or C_Spell.GetSpellName(id) or "Unknown spell")
+    row.nameText:SetAlpha(alpha)
+    row.idText:SetText(tostring(id))
+    row.idText:SetAlpha(alpha)
+    row.add:SetShown(activeBuff ~= nil)
+    row.remove:SetShown(activeBuff == nil)
+    row:Show()
+end
+
 function addon.RefreshTrackingWindow()
-    if not window or not window:IsShown() then
+    if not window or not window:IsVisible() or addon.IsCombat() then
         return
     end
     local ids = addon.GetTrackedSpellIDs()
     emptyText:SetShown(#ids == 0)
     for index, id in ipairs(ids) do
-        local row = rows[index] or CreateRow(index)
-        rows[index] = row
-        row.icon:SetTexture(addon.GetSpellIcon(id))
-        row.nameText:SetText(C_Spell.GetSpellName(id) or "Unknown spell")
-        row.idText:SetText(tostring(id))
-        row.remove.spellID = id
-        row:Show()
+        ShowSpellRow(index, (index - 1) * rowHeight, id)
     end
-    for index = #ids + 1, #rows do
+
+    local trackedHeight = math.max(1, #ids) * rowHeight
+    activeHeading:ClearAllPoints()
+    activeHeading:SetPoint("TOPLEFT", 4, -trackedHeight - 7)
+
+    local activeBuffs = addon.ReadActiveBuffs(addon.db.spells)
+    local activeCount = activeBuffs and #activeBuffs or 0
+    local activeTop = trackedHeight + 28
+    activeEmptyText:SetShown(activeCount == 0)
+    if activeCount == 0 then
+        activeEmptyText:SetText(activeBuffs and "No active buffs to add" or "Active buffs unavailable")
+    end
+    for index, buff in ipairs(activeBuffs or {}) do
+        ShowSpellRow(#ids + index, activeTop + (index - 1) * rowHeight, buff.id, buff)
+    end
+    for index = #ids + activeCount + 1, #rows do
         rows[index]:Hide()
     end
 
-    local height = math.max(1, #ids) * rowHeight
+    local height = activeTop + math.max(1, activeCount) * rowHeight
     list:SetHeight(height)
     local maxScroll = math.max(0, height - scroll:GetHeight())
     if scroll:GetVerticalScroll() > maxScroll then
@@ -104,12 +161,23 @@ local function CreateTrackingWindow()
     emptyText:SetPoint("TOPLEFT", 4, -6)
     emptyText:SetText("None added")
 
+    activeHeading = list:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    activeHeading:SetText("Active buffs")
+    activeEmptyText = list:CreateFontString(nil, "ARTWORK", "GameFontDisable")
+    activeEmptyText:SetPoint("TOPLEFT", activeHeading, "BOTTOMLEFT", 0, -8)
+
     feedback = window:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     feedback:SetPoint("BOTTOMLEFT", 16, 14)
     feedback:SetPoint("BOTTOMRIGHT", -16, 14)
     feedback:SetJustifyH("LEFT")
 
-    window:SetScript("OnHide", function()
+    window:SetScript("OnEvent", addon.RefreshTrackingWindow)
+    window:SetScript("OnShow", function(self)
+        self:RegisterUnitEvent("UNIT_AURA", "player")
+        addon.RefreshTrackingWindow()
+    end)
+    window:SetScript("OnHide", function(self)
+        self:UnregisterEvent("UNIT_AURA")
         input:ClearFocus()
     end)
 end
@@ -126,7 +194,6 @@ function addon.OpenTrackingWindow()
         input:SetText("")
         feedback:SetText("")
         window:Show()
-        addon.RefreshTrackingWindow()
         scroll:SetVerticalScroll(0)
     end
 end

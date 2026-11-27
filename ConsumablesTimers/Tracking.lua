@@ -14,6 +14,40 @@ local function IsPublic(value)
     return not issecretvalue(value)
 end
 
+local function ReadHelpfulAuras()
+    if C_Secrets.ShouldAurasBeSecret() then
+        return
+    end
+    local ok, auras = pcall(C_UnitAuras.GetUnitAuras, "player", "HELPFUL")
+    if ok and IsPublic(auras) and type(auras) == "table" then
+        return auras
+    end
+end
+
+function addon.ReadActiveBuffs(trackedSpells)
+    local auras = ReadHelpfulAuras()
+    if not auras then
+        return
+    end
+    local buffs, seen = {}, {}
+    for _, aura in ipairs(auras) do
+        if IsPublic(aura) then
+            local id = aura.spellId
+            if IsPublic(id) and addon.IsSpellID(id) and not seen[id] and not trackedSpells[id] then
+                local name, icon = aura.name, aura.icon
+                buffs[#buffs + 1] = {
+                    id = id,
+                    name = IsPublic(name) and name or nil,
+                    icon = IsPublic(icon) and icon ~= 0 and icon or nil,
+                }
+                seen[id] = true
+            end
+        end
+    end
+    table.sort(buffs, function(a, b) return a.id < b.id end)
+    return buffs
+end
+
 local function ReadAura(aura, now)
     local expires, rate, icon = aura.expirationTime, aura.timeMod, aura.icon
     if not IsPublic(expires) or not IsPublic(rate) or type(expires) ~= "number" then
@@ -58,14 +92,9 @@ end
 
 function addon.ReadAuras(spells, now)
     local food, found = nil, {}
-    local fullScan, auras
-    if not C_Secrets.ShouldAurasBeSecret() then
-        fullScan, auras = pcall(C_UnitAuras.GetUnitAuras, "player", "HELPFUL")
-        fullScan = fullScan and IsPublic(auras) and type(auras) == "table"
-    end
-
-    local incomplete = not fullScan
-    if fullScan then
+    local auras = ReadHelpfulAuras()
+    local incomplete = not auras
+    if auras then
         local foodName = C_Spell.GetSpellName(19708) or "Well Fed"
         for _, aura in ipairs(auras) do
             if IsPublic(aura) then

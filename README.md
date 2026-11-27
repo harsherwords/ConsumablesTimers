@@ -30,7 +30,7 @@ The weapon row displays the longest remaining temporary effect across equipped w
 
 ## Track another buff
 
-Open `/ct tracking` to see each added spell's icon, name, and ID. Enter the ID of the **buff aura** that appears on your character and click **Track** or press Enter. Click the **X** next to an ID to remove it.
+Open `/ct tracking` to see each added spell's icon, name, and ID. Under **Active buffs**, click the green checkmark beside a faded row to start tracking it. You can also enter a **buff aura** ID and click **Track** or press Enter. Click the **X** next to a tracked spell to remove it.
 
 <img src="images/ct-tracking.png" alt="The Tracked Spells window showing the Well-Rested icon, name, and spell ID 429959 beside the remove button" width="600">
 
