@@ -1,0 +1,47 @@
+# ConsumablesTimers
+
+A compact in-game window for **World of Warcraft: Forever** that shows your Well Fed and temporary weapon effect timers. Track more buffs with a slash command and enable a large reminder for missing buffs outside combat.
+
+<img src="images/default-wellfed-oilmissing.png" alt="ConsumablesTimers showing 14 minutes and 57 seconds of Well Fed remaining and Weapon Oil marked Missing in red" width="272">
+
+## Install
+
+1. On GitHub, select **Code → Download ZIP** and extract it.
+2. Open the extracted project and copy the inner [`ConsumablesTimers`](ConsumablesTimers/) folder into your WoW Forever `Interface\AddOns` folder. After copying, check for this file.
+
+   ```text
+   World of Warcraft\_forever_\Interface\AddOns\ConsumablesTimers\ConsumablesTimers.toc
+   ```
+
+3. Launch Forever or type `/reload` if it is already open, then enter `/ct` to open settings.
+
+## Customize the display
+
+- **Timers** appear in and out of combat by default. You can hide them during combat or mute the addon in the world, dungeons, and raids independently.
+- **Missing** appears in red by default. Choose a preset swatch, open the color picker, or enter a hex code. You can also edit labels, text, fonts, and sizes. Select **Apply text settings** to save those changes.
+- **Warnings** can show a large message when tracked buffs are missing outside combat.
+- **The padlock** in the upper-right corner lets you move the timer window and warning. The padlock hides and settings are locked during combat.
+
+<img src="images/main-ct-menu.png" alt="The ConsumablesTimers settings panel with combat and zone options, editable display labels, and missing-text color swatches" width="600">
+
+The weapon row displays the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues. When the game restricts buff data, the affected row can show **Unavailable**.
+
+## Track another buff
+
+Use the spell ID for the **buff aura** that appears on your character. For example, enter `/ct add 429959` to track spell `429959`.
+
+<img src="images/now-tracking-spell-id.png" alt="Chat confirmation that ConsumablesTimers is now tracking spell 429959" width="447">
+
+The custom Well Fed spell (`429959`) gets its own row below the two default timers.
+
+<img src="images/wellfed-oilmissing-customid-wellrested.png" alt="ConsumablesTimers showing the default Well Fed timer, missing Weapon Oil, and a third countdown for custom Well Fed spell 429959" width="277">
+
+| Command | Action |
+| --- | --- |
+| `/ct` | Open settings. |
+| `/ct add <spellID>` | Track a buff by its aura spell ID. |
+| `/ct remove <spellID>` | Remove an added buff. |
+| `/ct label <spellID> <text>` | Change an added buff's display label. Omit the text to reset it. |
+| `/ct list` | List tracked buffs. |
+| `/ct lock` or `/ct unlock` | Lock or unlock the timer and warning positions. |
+| `/ct resetposition` | Restore the timer and warning positions. |

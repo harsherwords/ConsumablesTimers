@@ -1,0 +1,11 @@
+## Interface: 16001
+## AllowLoadGameType: camelot
+## Title: ConsumablesTimers
+## Notes: Timers for food buffs, temporary weapon effects, and other player buffs.
+## Version: 1.1.0
+## SavedVariables: ConsumablesTimersDB
+
+Tracking.lua
+Display.lua
+Options.lua
+ConsumablesTimers.lua
