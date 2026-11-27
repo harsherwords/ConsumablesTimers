@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.2
+
+- Show the spell name between its icon and ID in `/ct tracking`.
+- Show an on-screen and chat warning when `/ct` or `/ct tracking` is used in combat.
+
 ## 1.2.1
 
 - Show buff icons beside spell IDs in the `/ct tracking` window.

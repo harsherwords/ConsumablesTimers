@@ -203,12 +203,21 @@ local function ShowHelp()
 end
 
 local function HandleSlash(message)
-    if addon.IsCombat() then
-        Say("ConsumablesTimers is locked during combat.")
-        return
-    end
     local command, arguments = strtrim(message):match("^(%S*)%s*(.*)$")
     command = command:lower()
+    local opensSettings = command == "" or command == "options"
+    if addon.IsCombat() then
+        local warning = "ConsumablesTimers is locked during combat."
+        if opensSettings or command == "tracking" then
+            warning = opensSettings and "Leave combat to open the settings window."
+                or "Leave combat to open the tracking window."
+            if UIErrorsFrame then
+                UIErrorsFrame:AddMessage(warning, 1, 0.25, 0.25, 1)
+            end
+        end
+        Say(warning)
+        return
+    end
     if command == "help" then
         ShowHelp()
         return
@@ -221,7 +230,7 @@ local function HandleSlash(message)
         return
     end
     local db = addon.db
-    if command == "" or command == "options" then
+    if opensSettings then
         addon.OpenOptions()
     elseif command == "tracking" then
         addon.OpenTrackingWindow()
