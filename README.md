@@ -2,7 +2,7 @@
 
 A compact timer and click-to-use window for **World of Warcraft: Forever**. Keep an eye on Well Fed, weapon enhancements, and any extra buffs you choose to track.
 
-[Install](#install) · [Track buffs](#track-buffs) · [On-Click Settings](#on-click-settings) · [Customize](#customize) · [Commands](#commands)
+[Download](https://github.com/harsherwords/ConsumablesTimers/releases/latest) · [Install](#install) · [Track buffs](#track-buffs) · [On-Click Settings](#on-click-settings) · [Customize](#customize) · [Commands](#commands)
 
 <p align="center">
   <img src="images/default-wellfed-oilmissing.png" alt="Timer window with Consumables and Personal sections, food and weapon counters, and a personal buff marked Missing" width="262">
@@ -10,8 +10,8 @@ A compact timer and click-to-use window for **World of Warcraft: Forever**. Keep
 
 ## Install
 
-1. On GitHub, select **Code → Download ZIP** and extract it.
-2. Copy the inner [`ConsumablesTimers`](ConsumablesTimers/) folder into your WoW Forever `Interface\AddOns` folder. Check for the TOC at this path.
+1. Open the latest [GitHub Release](https://github.com/harsherwords/ConsumablesTimers/releases/latest) and download **`ConsumablesTimers.zip`** under **Assets**.
+2. Extract the ZIP directly into your WoW Forever `Interface\AddOns` folder. The archive creates the `ConsumablesTimers` folder at this path.
 
    ```text
    World of Warcraft\_forever_\Interface\AddOns\ConsumablesTimers\ConsumablesTimers.toc
