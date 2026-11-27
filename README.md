@@ -26,9 +26,13 @@ A compact in-game window for **World of Warcraft: Forever** that shows your Well
 
 The weapon row displays the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues. When WoW restricts access to a timer, its row shows **In Combat** during combat and **Unavailable** outside combat.
 
+<img src="images/consumables-in-combat.png" alt="The Consumables window in combat with two buff rows marked In Combat and the weapon effect timer showing 23 minutes and 29 seconds" width="297">
+
 ## Track another buff
 
 Open `/ct tracking` to see each added spell's icon, name, and ID. Enter the ID of the **buff aura** that appears on your character and click **Track** or press Enter. Click the **X** next to an ID to remove it.
+
+<img src="images/ct-tracking.png" alt="The Tracked Spells window showing the Well-Rested icon, name, and spell ID 429959 beside the remove button" width="600">
 
 Using `/ct` or `/ct tracking` in combat shows a warning to open the window after combat.
 
@@ -36,9 +40,9 @@ You can also add an ID from chat. For example, enter `/ct add 429959` to track s
 
 <img src="images/now-tracking-spell-id.png" alt="Chat confirmation that ConsumablesTimers is now tracking spell 429959" width="447">
 
-The custom Well Fed spell (`429959`) gets its own row below the two default timers.
+Well-Rested (`429959`) gets its own row below the two default timers.
 
-<img src="images/wellfed-oilmissing-customid-wellrested.png" alt="ConsumablesTimers showing the default Well Fed timer, missing Weapon Oil, and a third countdown for custom Well Fed spell 429959" width="277">
+<img src="images/wellfed-oilmissing-customid-wellrested.png" alt="ConsumablesTimers showing the default Well Fed timer, missing Weapon Oil, and a third countdown for Well-Rested" width="277">
 
 | Command | Action |
 | --- | --- |
