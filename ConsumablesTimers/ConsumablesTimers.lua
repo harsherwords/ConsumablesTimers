@@ -81,7 +81,11 @@ end
 
 local inCombat, enteredWorld
 local entries = {}
-local fallbackIcon = 134400
+
+function addon.GetSpellIcon(id)
+    local icon = C_Spell.GetSpellTexture(id)
+    return icon and icon ~= 0 and icon or 134400
+end
 
 function addon.IsCombat()
     return inCombat or InCombatLockdown()
@@ -149,12 +153,13 @@ function addon.RebuildDisplay()
         if label == "" then
             label = C_Spell.GetSpellName(id) or ("Spell " .. id)
         end
-        entries[#entries + 1] = { key = id, label = label, icon = C_Spell.GetSpellTexture(id) or fallbackIcon }
+        entries[#entries + 1] = { key = id, label = label, icon = addon.GetSpellIcon(id) }
     end
 
     addon.LayoutDisplay(entries)
     addon.UpdateInteraction()
     addon.Refresh()
+    addon.RefreshTrackingWindow()
 end
 
 local function RequestSpell(id)
@@ -182,7 +187,6 @@ function addon.SetTrackedSpell(id, track)
         RequestSpell(id)
     end
     addon.RebuildDisplay()
-    addon.RefreshTrackingWindow()
     return true, (track and "Now tracking spell " or "Removed spell ") .. id .. "."
 end
 

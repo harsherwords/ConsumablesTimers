@@ -11,8 +11,13 @@ local function CreateRow(index)
     row:SetPoint("TOPRIGHT", 0, y)
     row:SetHeight(rowHeight)
 
+    row.icon = row:CreateTexture(nil, "ARTWORK")
+    row.icon:SetPoint("LEFT", 4, 0)
+    row.icon:SetSize(22, 22)
+    row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
     row.idText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
-    row.idText:SetPoint("LEFT", 4, 0)
+    row.idText:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
 
     row.remove = addon.CreateOptionsButton(row, "X", 28)
     row.remove:SetPoint("RIGHT", -4, 0)
@@ -32,6 +37,7 @@ function addon.RefreshTrackingWindow()
     for index, id in ipairs(ids) do
         local row = rows[index] or CreateRow(index)
         rows[index] = row
+        row.icon:SetTexture(addon.GetSpellIcon(id))
         row.idText:SetText(tostring(id))
         row.remove.spellID = id
         row:Show()

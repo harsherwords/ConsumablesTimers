@@ -28,7 +28,7 @@ The weapon row displays the longest remaining temporary effect across equipped w
 
 ## Track another buff
 
-Open `/ct tracking` to view your added spell IDs. Enter the ID of the **buff aura** that appears on your character and click **Track** or press Enter. Click the **X** next to an ID to remove it.
+Open `/ct tracking` to view your added spell IDs and buff icons. Enter the ID of the **buff aura** that appears on your character and click **Track** or press Enter. Click the **X** next to an ID to remove it.
 
 You can also add an ID from chat. For example, enter `/ct add 429959` to track spell `429959`.
 

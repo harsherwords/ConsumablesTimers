@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Show buff icons beside spell IDs in the `/ct tracking` window.
+
 ## 1.2.0
 
 - Add `/ct tracking` to list, add, and remove extra tracked spell IDs in one window.
