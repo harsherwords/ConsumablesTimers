@@ -1,0 +1,12 @@
+# Changelog
+
+## 1.1.0
+
+- Show missing timer text in red by default, with preset color swatches, a color picker, and a hex field.
+- Add a padlock to the timer window to lock or unlock the timer and warning positions outside combat.
+
+## 1.0.0
+
+- Add countdowns for Well Fed and temporary weapon effects, plus custom buff tracking by spell ID.
+- Add optional missing-buff warnings and controls for combat, world, dungeon, and raid visibility.
+- Add customizable display text and draggable timer and warning positions.
