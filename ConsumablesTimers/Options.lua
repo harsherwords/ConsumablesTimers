@@ -218,7 +218,8 @@ local function AddTextOptions()
     local fields = {
         { "title", "Window title" }, { "wellfed", "Food label" }, { "weapon", "Weapon label" },
         { "missing", "Missing timer" }, { "active", "Timer with no expiry" },
-        { "unavailable", "Unavailable timer" }, { "warning", "Warning message (%s = buff names)" },
+        { "unavailable", "Unavailable timer" }, { "inCombat", "Unavailable in combat" },
+        { "warning", "Warning message (%s = buff names)" },
     }
     for index, field in ipairs(fields) do
         local key, name = unpack(field)
@@ -228,15 +229,15 @@ local function AddTextOptions()
     end
     AddMissingColorOptions(364)
 
-    Label("Text appearance", 10, 499, "GameFontNormal")
-    Label("Font", 104, 525)
-    Label("Size", 252, 525)
-    Label("Hex color", 312, 525)
+    Label("Text appearance", 10, 529, "GameFontNormal")
+    Label("Font", 104, 555)
+    Label("Size", 252, 555)
+    Label("Hex color", 312, 555)
     local textStyles = { { "title", "Title" }, { "label", "Buff names" },
         { "timer", "Timers" }, { "warning", "Warning" } }
     for index, style in ipairs(textStyles) do
         local key, name = unpack(style)
-        local y = 546 + (index - 1) * 32
+        local y = 576 + (index - 1) * 32
         Label(name, 12, y + 5)
         local inputs = {}
         inputs.font = addon.CreateOptionsButton(content, "", 126)
@@ -252,7 +253,7 @@ local function AddTextOptions()
         inputs.outline = Checkbox(content, "Outline", 395, y - 2)
         styleInputs[key] = inputs
     end
-    Label("Change added spell labels with /ct label <spellID> <text>.", 12, 687)
+    Label("Change added spell labels with /ct label <spellID> <text>.", 12, 717)
 end
 
 function addon.CreateOptionsWindow(name, caption, width, height)
@@ -288,7 +289,7 @@ function addon.OpenOptions()
         scroll:SetPoint("TOPLEFT", 13, -43)
         scroll:SetPoint("BOTTOMRIGHT", -30, 51)
         content = CreateFrame("Frame", nil, scroll)
-        content:SetSize(485, 715)
+        content:SetSize(485, 745)
         scroll:SetScrollChild(content)
         AddBehaviorOptions()
         AddTextOptions()

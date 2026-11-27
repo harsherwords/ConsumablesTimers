@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+- Show **In Combat** on timers whose data is restricted during combat, with customizable wording under **Display text**.
+
 ## 1.2.2
 
 - Show the spell name between its icon and ID in `/ct tracking`.

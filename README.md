@@ -24,7 +24,7 @@ A compact in-game window for **World of Warcraft: Forever** that shows your Well
 
 <img src="images/main-ct-menu.png" alt="The ConsumablesTimers settings panel with combat and zone options, editable display labels, and missing-text color swatches" width="600">
 
-The weapon row displays the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues. When the game restricts buff data, the affected row can show **Unavailable**.
+The weapon row displays the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues. When WoW restricts access to a timer, its row shows **In Combat** during combat and **Unavailable** outside combat.
 
 ## Track another buff
 

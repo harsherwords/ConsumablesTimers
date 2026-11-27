@@ -13,7 +13,8 @@ local defaults = {
     warningPosition = { x = 0, y = 190 },
     text = {
         title = "Consumables", wellfed = "Well Fed", weapon = "Weapon Oil",
-        missing = "Missing", active = "Active", unavailable = "Unavailable", warning = "Missing: %s",
+        missing = "Missing", active = "Active", unavailable = "Unavailable", inCombat = "In Combat",
+        warning = "Missing: %s",
     },
     styles = {
         title = { font = 1, size = 11, color = "F4D07A", outline = false },
@@ -123,7 +124,7 @@ function addon.Refresh()
     timers.wellfed, timers.weapon = food, addon.ReadWeapon()
     local showWarning = db.warn and not combat
     local previewWarning = showWarning and not db.locked and addon.OptionsShown()
-    addon.Render(entries, timers, true, showWarning, previewWarning)
+    addon.Render(entries, timers, combat, showWarning, previewWarning)
 end
 
 local function DisplayLabel(key, fallback)

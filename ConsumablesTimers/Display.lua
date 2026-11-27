@@ -166,6 +166,8 @@ function addon.LayoutDisplay(entries)
     local top = math.max(25, title:IsShown() and styles.title.size + 11 or 0)
     local height = math.max(27, styles.timer.size + 6, db.showLabels and styles.label.size + 6 or 0)
     local labelWidth, timerWidth = 0, 76
+    local text = db.text
+    local timerSamples = { "88:88:88", text.missing, text.active, text.unavailable, text.inCombat }
     for index, entry in ipairs(entries) do
         local row = rows[index] or CreateRow()
         rows[index] = row
@@ -180,7 +182,7 @@ function addon.LayoutDisplay(entries)
         if db.showLabels then
             labelWidth = math.max(labelWidth, row.label:GetUnboundedStringWidth() + 10)
         end
-        for _, sample in ipairs({ "88:88:88", db.text.missing, db.text.active, db.text.unavailable }) do
+        for _, sample in ipairs(timerSamples) do
             row.timer:SetText(sample)
             timerWidth = math.max(timerWidth, row.timer:GetUnboundedStringWidth() + 2)
         end
@@ -210,9 +212,10 @@ local function FormatTime(seconds)
     return string.format("%d:%02d", minutes, seconds % 60)
 end
 
-function addon.Render(entries, timers, showTimers, showWarning, previewWarning)
+function addon.Render(entries, timers, combat, showWarning, previewWarning)
     local db = addon.db
     local text = db.text
+    local unavailableText = combat and text.inCombat or text.unavailable
     local timerR, timerG, timerB = addon.HexToRGB(db.styles.timer.color)
     local missingR, missingG, missingB = addon.HexToRGB(db.missingColor)
     local missing = {}
@@ -220,7 +223,7 @@ function addon.Render(entries, timers, showTimers, showWarning, previewWarning)
         local row, result = rows[index], timers[entry.key]
         local status, icon, alpha = text.missing, entry.icon, 0.45
         if result == addon.unavailable then
-            status, alpha = text.unavailable, 0.65
+            status, alpha = unavailableText, 0.65
         elseif result then
             status = result.remaining == math.huge and text.active or FormatTime(result.remaining)
             icon, alpha = result.icon or icon, 1
@@ -237,7 +240,7 @@ function addon.Render(entries, timers, showTimers, showWarning, previewWarning)
         end
     end
 
-    panel:SetShown(showTimers)
+    panel:Show()
     if showWarning and (#missing > 0 or previewWarning) then
         local names = #missing > 0 and table.concat(missing, ", ") or entries[1].label
         local message = text.warning:gsub("%%s", function() return names end)
