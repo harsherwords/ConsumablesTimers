@@ -171,6 +171,10 @@ local function CreateTrackingWindow()
     local windowWidth = 600
     window = addon.CreateOptionsWindow("ConsumablesTimersTracking", "Tracked Spells", windowWidth, 335)
 
+    local config = addon.CreateOptionsButton(window, "Config", 82)
+    config:SetPoint("TOPRIGHT", -40, -10)
+    config:SetScript("OnClick", addon.OpenOptions)
+
     local label = window:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     label:SetPoint("TOPLEFT", 16, -53)
     label:SetText("Spell ID")

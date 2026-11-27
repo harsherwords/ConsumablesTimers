@@ -31,7 +31,9 @@ The weapon row displays the longest remaining temporary effect across equipped w
 
 ## Track another buff
 
-Open `/ct tracking` to see each added spell's icon, name, and ID. Under **Active buffs**, click the green checkmark beside a faded row to start tracking it. You can also enter a **buff aura** ID and click **Track** or press Enter. Click the **X** next to a tracked spell to remove it.
+Open `/ct tracking` or select the **Tracking** tab in `/ct` to see each added spell's icon, name, and ID. Click **Config** at the top of the tracking window to return to settings.
+
+Under **Active buffs**, click the green checkmark beside a faded row to start tracking it. You can also enter a **buff aura** ID and click **Track** or press Enter. Click the **X** next to a tracked spell to remove it.
 
 Use the category dropdown to place a spell in **Consumables**, **Party & Raid**, or **Personal**. Each populated category has its own section in the timer window. Existing tracked spells start in **Personal** unless you assign them to another category.
 

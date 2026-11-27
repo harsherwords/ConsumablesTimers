@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.4
+
+- Add a **Tracking** tab in `/ct` and a **Config** button in the tracking window for switching between them.
+
 ## 1.5.3
 
 - Show total remaining weapon enhancement uses across bag items in the timer window and Weapon picker.

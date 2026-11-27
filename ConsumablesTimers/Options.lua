@@ -415,6 +415,9 @@ function addon.OpenOptions()
         generalTab:SetPoint("TOPLEFT", 16, -43)
         local actionTab = addon.CreateOptionsButton(panel, "On-Click Settings", 144)
         actionTab:SetPoint("LEFT", generalTab, "RIGHT", 5, 0)
+        local trackingTab = addon.CreateOptionsButton(panel, "Tracking", 93)
+        trackingTab:SetPoint("LEFT", actionTab, "RIGHT", 5, 0)
+        trackingTab:SetScript("OnClick", addon.OpenTrackingWindow)
         local function SelectTab(general)
             if addon.IsCombat() then
                 return
