@@ -4,6 +4,9 @@ local panel, content, status
 local checks, textInputs, styleInputs = {}, {}, {}
 local missingColorInput, pickerCallback
 local missingColorSwatches = {}
+local clickOptions
+local specSections = {}
+local bagItems = { food = {}, flask = {} }
 
 local function ParseHexColor(text)
     return strtrim(text):upper():match("^#?(%x%x%x%x%x%x)$")
@@ -192,6 +195,7 @@ local function AddBehaviorOptions()
         { "disableRaid", "Disable in raids" },
         { "locked", "Lock timer and warning positions" },
         { "showLabels", "Show buff names beside the icons" },
+        { "hideDefaultBuffs", "Hide the default Well Fed and Weapon Oil trackers" },
     }
     for index, setting in ipairs(settings) do
         local key, name = unpack(setting)
@@ -214,30 +218,33 @@ local function AddBehaviorOptions()
 end
 
 local function AddTextOptions()
-    Label("Display text", 10, 220, "GameFontNormal")
+    local offset = 25
+    Label("Display text", 10, 220 + offset, "GameFontNormal")
     local fields = {
         { "title", "Window title" }, { "wellfed", "Food label" }, { "weapon", "Weapon label" },
         { "missing", "Missing timer" }, { "active", "Timer with no expiry" },
         { "unavailable", "Unavailable timer" }, { "inCombat", "Unavailable in combat" },
         { "warning", "Warning message (%s = buff names)" },
+        { "flask", "Flask label" },
     }
     for index, field in ipairs(fields) do
         local key, name = unpack(field)
-        local y = 244 + (index - 1) * 30 + (index > 4 and 34 or 0)
+        local y = 244 + offset + (index - 1) * 30 + (index > 4 and 34 or 0)
         Label(name, 12, y + 6)
         textInputs[key] = EditBox(230, y, 222, key == "warning" and 180 or 80)
     end
-    AddMissingColorOptions(364)
+    AddMissingColorOptions(364 + offset)
 
-    Label("Text appearance", 10, 529, "GameFontNormal")
-    Label("Font", 104, 555)
-    Label("Size", 252, 555)
-    Label("Hex color", 312, 555)
+    offset = offset + 30
+    Label("Text appearance", 10, 529 + offset, "GameFontNormal")
+    Label("Font", 104, 555 + offset)
+    Label("Size", 252, 555 + offset)
+    Label("Hex color", 312, 555 + offset)
     local textStyles = { { "title", "Title" }, { "label", "Buff names" },
         { "timer", "Timers" }, { "warning", "Warning" } }
     for index, style in ipairs(textStyles) do
         local key, name = unpack(style)
-        local y = 576 + (index - 1) * 32
+        local y = 576 + offset + (index - 1) * 32
         Label(name, 12, y + 5)
         local inputs = {}
         inputs.font = addon.CreateOptionsButton(content, "", 126)
@@ -253,7 +260,100 @@ local function AddTextOptions()
         inputs.outline = Checkbox(content, "Outline", 395, y - 2)
         styleInputs[key] = inputs
     end
-    Label("Change added spell labels with /ct label <spellID> <text>.", 12, 717)
+    Label("Change added spell labels with /ct label <spellID> <text>.", 12, 717 + offset)
+end
+
+local function CreateConsumableDropdown(parent, spec, kind, y)
+    local label = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    label:SetPoint("TOPLEFT", 8, -y - 5)
+    label:SetText(kind == "food" and "Food" or "Flask")
+
+    local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+    dropdown:SetPoint("TOPLEFT", 78, -y)
+    dropdown:SetSize(310, 24)
+    dropdown:SetDefaultText("None")
+    dropdown:SetupMenu(function(_, root)
+        local selected = addon.GetSelectedItem(spec, kind) or 0
+        local function IsSelected(id)
+            return (addon.GetSelectedItem(spec, kind) or 0) == id
+        end
+        local function SelectItem(id)
+            addon.SetSelectedItem(spec, kind, id ~= 0 and id or nil)
+        end
+
+        root:SetScrollMode(260)
+        root:CreateRadio("None", IsSelected, SelectItem, 0)
+        local listed = false
+        for _, item in ipairs(bagItems[kind]) do
+            local caption = item.name .. " (" .. addon.GetBagCount(item.id) .. ")"
+            root:CreateRadio(caption, IsSelected, SelectItem, item.id)
+            listed = listed or selected == item.id
+        end
+        if selected ~= 0 and not listed then
+            root:CreateRadio(addon.GetConsumableName(selected) .. " (out of bags)", IsSelected, SelectItem, selected)
+        end
+    end)
+    return dropdown
+end
+
+local function BuildClickOptions()
+    clickOptions = CreateFrame("Frame", nil, panel)
+    clickOptions:SetPoint("TOPLEFT", 20, -84)
+    clickOptions:SetPoint("BOTTOMRIGHT", -20, 22)
+    local instructions = clickOptions:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    instructions:SetPoint("TOPLEFT", 8, -4)
+    instructions:SetPoint("TOPRIGHT", -8, -4)
+    instructions:SetJustifyH("LEFT")
+    instructions:SetText("Choose consumables from your bags. Lock the timer window to click items or cast known helpful spells on yourself outside combat.")
+
+    for spec = 1, 2 do
+        local section = CreateFrame("Frame", nil, clickOptions)
+        section:SetPoint("TOPLEFT", 0, -49 - (spec - 1) * 112)
+        section:SetSize(470, 100)
+        section.header = section:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        section.header:SetPoint("TOPLEFT", 8, 0)
+        section.food = CreateConsumableDropdown(section, spec, "food", 24)
+        section.flask = CreateConsumableDropdown(section, spec, "flask", 57)
+        specSections[spec] = section
+    end
+    clickOptions:SetScript("OnShow", addon.RefreshClickOptions)
+    clickOptions:SetScript("OnHide", function()
+        for _, section in ipairs(specSections) do
+            section.food:CloseMenu()
+            section.flask:CloseMenu()
+        end
+    end)
+    clickOptions:Hide()
+end
+
+function addon.RefreshClickOptions()
+    if not clickOptions or not clickOptions:IsVisible() or addon.IsCombat() then
+        return
+    end
+    bagItems = addon.ScanBagConsumables()
+    local activeSpec = addon.GetActiveSpec()
+    for spec, section in ipairs(specSections) do
+        local visible = spec == 1 or addon.HasSecondarySpec()
+        section:SetShown(visible)
+        if visible then
+            local title = spec == 1 and "Primary spec" or "Secondary spec"
+            section.header:SetText(activeSpec == spec and title .. " (active)" or title)
+            section.food:GenerateMenu()
+            section.flask:GenerateMenu()
+        end
+    end
+end
+
+local function ClearTextFocus()
+    CloseMissingColorPicker()
+    missingColorInput:ClearFocus()
+    for _, edit in pairs(textInputs) do
+        edit:ClearFocus()
+    end
+    for _, inputs in pairs(styleInputs) do
+        inputs.size:ClearFocus()
+        inputs.color:ClearFocus()
+    end
 end
 
 function addon.CreateOptionsWindow(name, caption, width, height)
@@ -286,10 +386,10 @@ function addon.OpenOptions()
         panel = addon.CreateOptionsWindow("ConsumablesTimersOptions", "ConsumablesTimers", 530, 545)
 
         local scroll = CreateFrame("ScrollFrame", "ConsumablesTimersOptionsScroll", panel, "UIPanelScrollFrameTemplate")
-        scroll:SetPoint("TOPLEFT", 13, -43)
+        scroll:SetPoint("TOPLEFT", 13, -74)
         scroll:SetPoint("BOTTOMRIGHT", -30, 51)
         content = CreateFrame("Frame", nil, scroll)
-        content:SetSize(485, 745)
+        content:SetSize(485, 800)
         scroll:SetScrollChild(content)
         AddBehaviorOptions()
         AddTextOptions()
@@ -302,16 +402,29 @@ function addon.OpenOptions()
         status:SetPoint("RIGHT", apply, "LEFT", -10, 0)
         status:SetJustifyH("LEFT")
 
+        BuildClickOptions()
+        local generalTab = addon.CreateOptionsButton(panel, "General", 93)
+        generalTab:SetPoint("TOPLEFT", 16, -43)
+        local actionTab = addon.CreateOptionsButton(panel, "On-Click Settings", 144)
+        actionTab:SetPoint("LEFT", generalTab, "RIGHT", 5, 0)
+        local function SelectTab(general)
+            if addon.IsCombat() then
+                return
+            end
+            ClearTextFocus()
+            scroll:SetShown(general)
+            apply:SetShown(general)
+            status:SetShown(general)
+            clickOptions:SetShown(not general)
+            generalTab:SetEnabled(not general)
+            actionTab:SetEnabled(general)
+        end
+        generalTab:SetScript("OnClick", function() SelectTab(true) end)
+        actionTab:SetScript("OnClick", function() SelectTab(false) end)
+        SelectTab(true)
+
         panel:SetScript("OnHide", function()
-            CloseMissingColorPicker()
-            missingColorInput:ClearFocus()
-            for _, edit in pairs(textInputs) do
-                edit:ClearFocus()
-            end
-            for _, inputs in pairs(styleInputs) do
-                inputs.size:ClearFocus()
-                inputs.color:ClearFocus()
-            end
+            ClearTextFocus()
             addon.Refresh()
         end)
     end

@@ -2,8 +2,22 @@ local _, addon = ...
 
 local window, scroll, list, emptyText, input, feedback
 local activeHeading, activeEmptyText
+local inputCategory
+local pendingCategories = {}
 local rows = {}
 local rowHeight = 28
+
+local function CreateCategoryDropdown(parent, onChange)
+    local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+    dropdown:SetSize(128, 24)
+    dropdown.categoryID = "personal"
+    dropdown:SetupMenu(function(owner, root)
+        for _, category in ipairs(addon.categories) do
+            root:CreateRadio(category.name, function(value) return owner.categoryID == value end, onChange, category.id)
+        end
+    end)
+    return dropdown
+end
 
 local function RevealTrackedSpell(id)
     for index, trackedID in ipairs(addon.GetTrackedSpellIDs()) do
@@ -44,16 +58,30 @@ local function CreateRow()
     row.add:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
     row.add:SetScript("OnClick", function()
         local id = row.spellID
-        local changed, message = addon.SetTrackedSpell(id, true)
+        local changed, message = addon.SetTrackedSpell(id, true, row.category.categoryID)
         if changed then
+            pendingCategories[id] = nil
             RevealTrackedSpell(id)
         end
         feedback:SetText(message)
     end)
 
+    row.category = CreateCategoryDropdown(row, function(category)
+        if addon.IsCombat() then
+            return
+        end
+        local id = row.spellID
+        if addon.db.spells[id] then
+            addon.SetSpellCategory(id, category)
+        else
+            pendingCategories[id] = category
+            row.category.categoryID = category
+        end
+    end)
+    row.category:SetPoint("RIGHT", row.remove, "LEFT", -10, 0)
     row.idText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-    row.idText:SetPoint("RIGHT", row.remove, "LEFT", -12, 0)
-    row.idText:SetWidth(84)
+    row.idText:SetPoint("RIGHT", row.category, "LEFT", -10, 0)
+    row.idText:SetWidth(68)
     row.idText:SetJustifyH("RIGHT")
 
     row.nameText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
@@ -67,7 +95,15 @@ end
 local function ShowSpellRow(index, top, id, activeBuff)
     local row = rows[index] or CreateRow()
     rows[index] = row
+    local category = activeBuff and pendingCategories[id] or addon.GetSpellCategory(id)
+    if row.spellID ~= id then
+        row.category:CloseMenu()
+    end
     row.spellID = id
+    if row.category.categoryID ~= category then
+        row.category.categoryID = category
+        row.category:GenerateMenu()
+    end
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", 0, -top)
     row:SetPoint("TOPRIGHT", 0, -top)
@@ -109,6 +145,7 @@ function addon.RefreshTrackingWindow()
         ShowSpellRow(#ids + index, activeTop + (index - 1) * rowHeight, buff.id, buff)
     end
     for index = #ids + activeCount + 1, #rows do
+        rows[index].category:CloseMenu()
         rows[index]:Hide()
     end
 
@@ -122,7 +159,7 @@ end
 
 local function TrackInput()
     local id = addon.ParseSpellID(input:GetText())
-    local changed, message = addon.SetTrackedSpell(id, true)
+    local changed, message = addon.SetTrackedSpell(id, true, inputCategory.categoryID)
     if changed then
         input:SetText("")
         input:ClearFocus()
@@ -131,7 +168,7 @@ local function TrackInput()
 end
 
 local function CreateTrackingWindow()
-    local windowWidth = 440
+    local windowWidth = 600
     window = addon.CreateOptionsWindow("ConsumablesTimersTracking", "Tracked Spells", windowWidth, 335)
 
     local label = window:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
@@ -148,7 +185,13 @@ local function CreateTrackingWindow()
     local track = addon.CreateOptionsButton(window, "Track", 80)
     track:SetPoint("TOPRIGHT", -30, -47)
     track:SetScript("OnClick", TrackInput)
-    input:SetPoint("TOPRIGHT", track, "TOPLEFT", -10, 0)
+    inputCategory = CreateCategoryDropdown(window, function(category)
+        if not addon.IsCombat() then
+            inputCategory.categoryID = category
+        end
+    end)
+    inputCategory:SetPoint("TOPRIGHT", track, "TOPLEFT", -10, 0)
+    input:SetPoint("TOPRIGHT", inputCategory, "TOPLEFT", -12, 0)
 
     scroll = CreateFrame("ScrollFrame", "ConsumablesTimersTrackingScroll", window, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 16, -88)
@@ -178,6 +221,11 @@ local function CreateTrackingWindow()
     end)
     window:SetScript("OnHide", function(self)
         self:UnregisterEvent("UNIT_AURA")
+        inputCategory:CloseMenu()
+        for _, row in ipairs(rows) do
+            row.category:CloseMenu()
+        end
+        pendingCategories = {}
         input:ClearFocus()
     end)
 end

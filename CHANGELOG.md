@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Group timers into Consumables, Party & Raid, and Personal, with a category dropdown in `/ct tracking`.
+- Add an option to hide the default Well Fed and Weapon Oil trackers.
+- Add a per-character, per-spec **On-Click Settings** tab for food and flasks. Show food counts on the icon and allow direct clicks on supported items and helpful spells outside combat.
+
 ## 1.3.0
 
 - Show currently active buffs as faded rows in `/ct tracking` and add them with a green checkmark.

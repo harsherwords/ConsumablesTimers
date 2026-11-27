@@ -1,5 +1,15 @@
 local name, addon = ...
 
+addon.categories = {
+    { id = "consumables", name = "Consumables" },
+    { id = "group", name = "Party & Raid" },
+    { id = "personal", name = "Personal" },
+}
+local categoryNames = {}
+for _, category in ipairs(addon.categories) do
+    categoryNames[category.id] = category.name
+end
+
 local defaults = {
     outOfCombatOnly = false,
     warn = false,
@@ -8,11 +18,12 @@ local defaults = {
     disableRaid = false,
     locked = true,
     showLabels = false,
+    hideDefaultBuffs = false,
     missingColor = "FF5E5E",
     timerPosition = { x = -270, y = 125 },
     warningPosition = { x = 0, y = 190 },
     text = {
-        title = "Consumables", wellfed = "Well Fed", weapon = "Weapon Oil",
+        title = "Consumables", wellfed = "Well Fed", weapon = "Weapon Oil", flask = "Flask",
         missing = "Missing", active = "Active", unavailable = "Unavailable", inCombat = "In Combat",
         warning = "Missing: %s",
     },
@@ -23,6 +34,7 @@ local defaults = {
         warning = { font = 1, size = 28, color = "FF655A", outline = true },
     },
     spells = {},
+    spellCategories = {},
 }
 
 local function ApplyDefaults(saved, source)
@@ -69,19 +81,41 @@ local function LoadDatabase()
         end
     end
     local spells = {}
+    local categories = {}
     for key, label in pairs(db.spells) do
         local id = tonumber(key)
         if addon.IsSpellID(id) and type(label) == "string" then
             spells[id] = label
+            local category = db.spellCategories[id] or db.spellCategories[key] or db.spellCategories[tostring(id)]
+            if categoryNames[category] then
+                categories[id] = category
+            end
         end
     end
     db.spells = spells
+    db.spellCategories = categories
     ConsumablesTimersDB = db
     addon.db = db
 end
 
 local inCombat, enteredWorld
 local entries = {}
+local displaySpec
+
+function addon.GetSpellCategory(id)
+    return addon.db.spellCategories[id] or "personal"
+end
+
+function addon.GetCategoryName(id)
+    return categoryNames[id]
+end
+
+function addon.SetSpellCategory(id, category)
+    if not addon.IsCombat() and addon.db.spells[id] and categoryNames[category] then
+        addon.db.spellCategories[id] = category
+        addon.RebuildDisplay()
+    end
+end
 
 function addon.GetSpellIcon(id)
     local icon = C_Spell.GetSpellTexture(id)
@@ -116,12 +150,18 @@ function addon.Refresh()
     end
     local db = addon.db
     local combat = addon.IsCombat()
-    if IsMuted(db) or (combat and db.outOfCombatOnly) then
+    if not combat and displaySpec ~= addon.GetActiveSpec() then
+        addon.RebuildDisplay()
+        return
+    end
+    if #entries == 0 or IsMuted(db) or (combat and db.outOfCombatOnly) then
         addon.HideDisplay()
         return
     end
     local food, timers = addon.ReadAuras(db.spells, GetTime())
-    timers.wellfed, timers.weapon = food, addon.ReadWeapon()
+    if not db.hideDefaultBuffs then
+        timers.wellfed, timers.weapon = food, addon.ReadWeapon()
+    end
     local showWarning = db.warn and not combat
     local previewWarning = showWarning and not db.locked and addon.OptionsShown()
     addon.Render(entries, timers, combat, showWarning, previewWarning)
@@ -143,18 +183,38 @@ end
 
 function addon.RebuildDisplay()
     local db = addon.db
-    entries = {
-        { key = "wellfed", label = DisplayLabel("wellfed", defaults.text.wellfed), icon = 136000 },
-        { key = "weapon", label = DisplayLabel("weapon", defaults.text.weapon),
-            icon = "Interface\\Icons\\INV_Potion_105" },
-    }
+    displaySpec = addon.GetActiveSpec()
+    local groups = {}
+    for _, category in ipairs(addon.categories) do
+        groups[category.id] = {}
+    end
+    local consumables = groups.consumables
+    if not db.hideDefaultBuffs then
+        consumables[1] = { key = "wellfed", label = DisplayLabel("wellfed", defaults.text.wellfed), icon = 136000,
+            click = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "food")) }
+        consumables[2] = { key = "weapon", label = DisplayLabel("weapon", defaults.text.weapon),
+            icon = "Interface\\Icons\\INV_Potion_105" }
+    end
+    local flask = addon.GetItemClick(addon.GetSelectedItem(displaySpec, "flask"))
+    if flask then
+        consumables[#consumables + 1] = { key = "flask", label = DisplayLabel("flask", defaults.text.flask),
+            icon = 134400, click = flask, useOnly = true }
+    end
 
     for _, id in ipairs(addon.GetTrackedSpellIDs()) do
         local label = db.spells[id]
         if label == "" then
             label = C_Spell.GetSpellName(id) or ("Spell " .. id)
         end
-        entries[#entries + 1] = { key = id, label = label, icon = addon.GetSpellIcon(id) }
+        local group = groups[addon.GetSpellCategory(id)]
+        group[#group + 1] = { key = id, label = label, icon = addon.GetSpellIcon(id), click = addon.GetSpellClick(id) }
+    end
+    entries = {}
+    for _, category in ipairs(addon.categories) do
+        for _, entry in ipairs(groups[category.id]) do
+            entry.category = category.id
+            entries[#entries + 1] = entry
+        end
     end
 
     addon.LayoutDisplay(entries)
@@ -169,7 +229,7 @@ local function RequestSpell(id)
     end
 end
 
-function addon.SetTrackedSpell(id, track)
+function addon.SetTrackedSpell(id, track, category)
     if addon.IsCombat() then
         return false, "ConsumablesTimers is locked during combat."
     end
@@ -184,6 +244,7 @@ function addon.SetTrackedSpell(id, track)
     end
 
     spells[id] = track and "" or nil
+    addon.db.spellCategories[id] = track and categoryNames[category] and category or nil
     if track then
         RequestSpell(id)
     end
@@ -225,8 +286,10 @@ local function HandleSlash(message)
     end
     if command == "list" then
         for _, entry in ipairs(entries) do
-            local suffix = type(entry.key) == "number" and " (" .. entry.key .. ")" or ""
-            Say(entry.label .. suffix)
+            if not entry.useOnly then
+                local suffix = type(entry.key) == "number" and " (" .. entry.key .. ")" or ""
+                Say(entry.label .. suffix)
+            end
         end
         return
     end
@@ -263,6 +326,7 @@ local function HandleSlash(message)
         db.timerPosition = ApplyDefaults(nil, defaults.timerPosition)
         db.warningPosition = ApplyDefaults(nil, defaults.warningPosition)
         addon.RestorePositions()
+        addon.Refresh()
     else
         ShowHelp()
     end
@@ -272,9 +336,11 @@ local function UpdateCombatState()
     if addon.IsCombat() then
         addon.CloseOptions()
         addon.CloseTrackingWindow()
+        addon.UpdateInteraction()
+        addon.Refresh()
+    else
+        addon.RebuildDisplay()
     end
-    addon.UpdateInteraction()
-    addon.Refresh()
 end
 
 local events = CreateFrame("Frame")
@@ -286,6 +352,7 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         end
         self:UnregisterEvent(event)
         LoadDatabase()
+        addon.LoadClickSettings()
         addon.CreateDisplay()
         addon.RebuildDisplay()
 
@@ -294,7 +361,9 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         SlashCmdList.CONSUMABLESTIMERS = HandleSlash
 
         for _, refreshEvent in ipairs({ "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "ZONE_CHANGED_NEW_AREA",
-            "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_EQUIPMENT_CHANGED", "SPELL_DATA_LOAD_RESULT" }) do
+            "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_EQUIPMENT_CHANGED", "SPELL_DATA_LOAD_RESULT",
+            "ACTIVE_TALENT_GROUP_CHANGED", "PLAYER_TALENT_UPDATE", "SPELLS_CHANGED", "BAG_UPDATE_DELAYED",
+            "ITEM_DATA_LOAD_RESULT" }) do
             self:RegisterEvent(refreshEvent)
         end
         self:RegisterUnitEvent("UNIT_AURA", "player")
@@ -317,6 +386,14 @@ events:SetScript("OnEvent", function(self, event, arg1, arg2)
         if arg2 and addon.db.spells[arg1] then
             addon.RebuildDisplay()
         end
+    elseif event == "ACTIVE_TALENT_GROUP_CHANGED" or event == "PLAYER_TALENT_UPDATE" or event == "SPELLS_CHANGED" then
+        if not addon.IsCombat() then
+            addon.RebuildDisplay()
+            addon.RefreshClickOptions()
+        end
+    elseif event == "BAG_UPDATE_DELAYED" or event == "ITEM_DATA_LOAD_RESULT" then
+        addon.RefreshClickOptions()
+        addon.Refresh()
     else
         addon.Refresh()
     end

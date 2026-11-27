@@ -18,6 +18,7 @@ A compact in-game window for **World of Warcraft: Forever** that shows your Well
 ## Customize the display
 
 - **Timers** appear in and out of combat by default. You can hide them during combat or mute the addon in the world, dungeons, and raids independently.
+- **Default trackers** for Well Fed and Weapon Oil are grouped under **Consumables**. Use **Hide the default Well Fed and Weapon Oil trackers** in `/ct` to hide both.
 - **Missing** appears in red by default. Choose a preset swatch, open the color picker, or enter a hex code. You can also edit labels, text, fonts, and sizes. Select **Apply text settings** to save those changes.
 - **Warnings** can show a large message when tracked buffs are missing outside combat.
 - **The padlock** in the upper-right corner lets you move the timer window and warning. The padlock hides and settings are locked during combat.
@@ -31,6 +32,8 @@ The weapon row displays the longest remaining temporary effect across equipped w
 ## Track another buff
 
 Open `/ct tracking` to see each added spell's icon, name, and ID. Under **Active buffs**, click the green checkmark beside a faded row to start tracking it. You can also enter a **buff aura** ID and click **Track** or press Enter. Click the **X** next to a tracked spell to remove it.
+
+Use the category dropdown to place a spell in **Consumables**, **Party & Raid**, or **Personal**. Each populated category has its own section in the timer window. Existing tracked spells start in **Personal** unless you assign them to another category.
 
 <img src="images/ct-tracking.png" alt="The Tracked Spells window showing Well-Rested (429959) above faded active buffs with green checkmarks to add them" width="600">
 
@@ -54,3 +57,11 @@ Well-Rested (`429959`) gets its own row below the two default timers.
 | `/ct list` | List tracked buffs. |
 | `/ct lock` or `/ct unlock` | Lock or unlock the timer and warning positions. |
 | `/ct resetposition` | Restore the timer and warning positions. |
+
+## Click items and spells
+
+1. Open `/ct` and choose **On-Click Settings**. Pick food and, optionally, a flask from the items in your bags.
+2. Set your **Primary spec** choices. A **Secondary spec** section appears after you purchase it. The addon saves each spec's choices for this character.
+3. Lock the timer window. Outside combat, click the Well Fed icon to use the selected food, the optional Flask icon to use the selected flask, or a known, non-passive helpful spell's icon to cast that spell on yourself.
+
+The food icon shows the total left in your bags. The count is green at 21 or more, yellow at 2–20, and red at 0–1. The Flask row shows how many of the selected flask you have. To track a flask buff's duration, add its aura spell ID in `/ct tracking`.
