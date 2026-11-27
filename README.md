@@ -1,69 +1,84 @@
 # ConsumablesTimers
 
-A compact in-game window for **World of Warcraft: Forever** that shows your Well Fed and temporary weapon effect timers. Track more buffs with a slash command and enable a large reminder for missing buffs outside combat.
+A compact timer and click-to-use window for **World of Warcraft: Forever**. Keep an eye on Well Fed, weapon enhancements, and any extra buffs you choose to track.
 
-<img src="images/default-wellfed-oilmissing.png" alt="ConsumablesTimers showing 14 minutes and 57 seconds of Well Fed remaining and Weapon Oil marked Missing in red" width="272">
+[Install](#install) · [Track buffs](#track-buffs) · [On-Click Settings](#on-click-settings) · [Customize](#customize) · [Commands](#commands)
+
+<p align="center">
+  <img src="images/default-wellfed-oilmissing.png" alt="Timer window with Consumables and Personal sections, food and weapon counters, and a personal buff marked Missing" width="262">
+</p>
 
 ## Install
 
 1. On GitHub, select **Code → Download ZIP** and extract it.
-2. Open the extracted project and copy the inner [`ConsumablesTimers`](ConsumablesTimers/) folder into your WoW Forever `Interface\AddOns` folder. After copying, check for this file.
+2. Copy the inner [`ConsumablesTimers`](ConsumablesTimers/) folder into your WoW Forever `Interface\AddOns` folder. Check for the TOC at this path.
 
    ```text
    World of Warcraft\_forever_\Interface\AddOns\ConsumablesTimers\ConsumablesTimers.toc
    ```
 
-3. Launch Forever or type `/reload` if it is already open, then enter `/ct` to open settings.
+3. Launch Forever or type `/reload` if it is already open. Enter `/ct` to open settings.
 
-## Customize the display
+## Track buffs
 
-- **Timers** appear in and out of combat by default. You can hide them during combat or mute the addon in the world, dungeons, and raids independently.
-- **Default trackers** for Well Fed and Weapon Oil are grouped under **Consumables**. Use **Hide the default Well Fed and Weapon Oil trackers** in `/ct` to hide both.
-- **Missing** appears in red by default. Choose a preset swatch, open the color picker, or enter a hex code. You can also edit labels, text, fonts, and sizes. Select **Apply text settings** to save those changes.
-- **Warnings** can show a large message when tracked buffs are missing outside combat.
-- **The padlock** in the upper-right corner lets you move the timer window and warning. The padlock hides and settings are locked during combat.
+**Well Fed** and **Weapon Oil** are tracked by default under **Consumables**. The weapon timer shows the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues.
 
-<img src="images/main-ct-menu.png" alt="The ConsumablesTimers settings panel with combat and zone options, editable display labels, and missing-text color swatches" width="600">
+1. Open `/ct tracking` or choose **Tracking** in `/ct`.
+2. Under **Active buffs**, choose a category and click the green checkmark next to a faded row. To add a buff by ID, enter its **aura spell ID**, choose a category, and click **Track** or press Enter. For example, Well-Rested is `429959`.
+3. Use a tracked row’s dropdown to move it between **Consumables**, **Party & Raid**, and **Personal**. Each populated category gets its own section in the timer window. Click **X** to remove a tracked buff. If it is still active, it returns to the faded list.
 
-The weapon row displays the longest remaining temporary effect across equipped weapons, including oils, stones, poisons, and imbues. When WoW restricts access to a timer, its row shows **In Combat** during combat and **Unavailable** outside combat.
+Each row shows the buff icon, spell name, and spell ID. **Config** returns to your previous settings tab.
 
-<img src="images/consumables-in-combat.png" alt="The Consumables window in combat with two buff rows marked In Combat and the weapon effect timer showing 23 minutes and 29 seconds" width="297">
+<img src="images/ct-tracking.png" alt="Tracked Spells window with category dropdowns, tracked Well-Rested and Camp Benefits, green checkmarks beside active buffs, and the Config button" width="760">
 
-## Track another buff
+## On-Click Settings
 
-Open `/ct tracking` or select the **Tracking** tab in `/ct` to see each added spell's icon, name, and ID. Click **Config** at the top of the tracking window to return to settings.
+In `/ct` → **On-Click Settings**, set **Food**, **Flask**, and **Weapon** for your Primary spec. The Secondary spec pickers appear after you purchase that spec. Choices are saved per character and switch with your active spec.
 
-Under **Active buffs**, click the green checkmark beside a faded row to start tracking it. You can also enter a **buff aura** ID and click **Track** or press Enter. Click the **X** next to a tracked spell to remove it.
+**Auto** picks the item in your bags with the highest **Required Level** you meet. You can choose an item manually or select **None** to disable its shortcut. The Weapon picker includes oils such as Lesser Mana Oil and Wizard Oil, sharpening stones, weightstones, and other temporary enhancements.
 
-Use the category dropdown to place a spell in **Consumables**, **Party & Raid**, or **Personal**. Each populated category has its own section in the timer window. Existing tracked spells start in **Personal** unless you assign them to another category.
+<img src="images/on-click-tab.png" alt="On-Click Settings with Primary and Secondary spec pickers for food, flasks, and weapon enhancements, including Spotted Yellowtail and Lesser Mana Oil" width="600">
 
-<img src="images/ct-tracking.png" alt="The Tracked Spells window showing Well-Rested (429959) above faded active buffs with green checkmarks to add them" width="600">
+Lock the timer window to use its icons outside combat.
 
-Using `/ct` or `/ct tracking` in combat shows a warning to open the window after combat.
+| Icon | Click action | Bag count |
+| --- | --- | --- |
+| **Well Fed** | Use your chosen food. | Total items on the icon. |
+| **Weapon Oil** | Left-click to apply to the main hand. Right-click to apply to the off hand. | Total remaining uses on the icon. Two oils with five charges each show **10**. |
+| **Flask** | Use your chosen flask. Add its aura ID in **Tracking** for a buff countdown. | Total items in the row. |
+| **Tracked spell** | Cast a known, non-passive helpful spell on yourself. | |
 
-You can also add an ID from chat. For example, enter `/ct add 429959` to track spell `429959`.
+Food and weapon counts are **green** at 21 or more, **yellow** at 2–20, and **red** at 0–1.
 
-<img src="images/now-tracking-spell-id.png" alt="Chat confirmation that ConsumablesTimers is now tracking spell 429959" width="447">
+## Customize
 
-Well-Rested (`429959`) gets its own row below the two default timers.
+Open `/ct` → **General** to adjust the timer window.
 
-<img src="images/wellfed-oilmissing-customid-wellrested.png" alt="ConsumablesTimers showing the default Well Fed timer, missing Weapon Oil, and a third countdown for Well-Rested" width="277">
+- **Visibility** can be limited to out-of-combat play. You can also hide the default Well Fed and Weapon Oil rows or mute the addon independently in the world, dungeons, and raids.
+- **Missing-buff warnings** can display a large message outside combat. The **Missing** timer text starts red. Pick a swatch, use the color picker, or enter a hex code to change it.
+- **Display text** lets you edit the title, labels, status and warning wording, and text appearance. Click **Apply text settings** to save.
+- **Positioning** uses the padlock in the upper-right corner of the timer window. Unlock it to drag the timer or warning and lock it again to enable icon clicks.
+
+<img src="images/main-ct-menu.png" alt="General settings with the On-Click Settings and Tracking tabs, visibility and position controls, and missing-text color swatches" width="600">
+
+### During combat
+
+Timers stay visible by default. When WoW restricts access to a timer, the row reads **In Combat**. Outside combat, restricted timer data reads **Unavailable**. If you try `/ct` or `/ct tracking` in combat, the addon shows an on-screen and chat warning asking you to leave combat.
+
+<img src="images/consumables-in-combat.png" alt="Timer window showing In Combat on two restricted buff rows while the weapon enhancement countdown remains visible" width="297">
+
+## Commands
 
 | Command | Action |
 | --- | --- |
-| `/ct` | Open settings. |
-| `/ct tracking` | Open the window for adding and removing tracked spell IDs. |
+| `/ct` or `/ct options` | Open settings. |
+| `/ct tracking` | Open the tracked spells window. |
 | `/ct add <spellID>` | Track a buff by its aura spell ID. |
 | `/ct remove <spellID>` | Remove an added buff. |
-| `/ct label <spellID> <text>` | Change an added buff's display label. Omit the text to reset it. |
+| `/ct label <spellID> <text>` | Rename an added buff. Use `wellfed` or `weapon` for the built-in labels. Omit the text to reset the label. |
 | `/ct list` | List tracked buffs. |
 | `/ct lock` or `/ct unlock` | Lock or unlock the timer and warning positions. |
 | `/ct resetposition` | Restore the timer and warning positions. |
+| `/ct help` | List commands in chat. |
 
-## Click items and spells
-
-1. Open `/ct` and choose **On-Click Settings**. For each shortcut, **Auto** picks the item in your bags with the highest **Required Level** you meet. Pick a specific item to override Auto, or choose **None** to disable that shortcut.
-2. Set your **Primary spec** choices. The **Weapon** picker includes oils such as Lesser Mana Oil, sharpening stones, and other temporary enhancements. A **Secondary spec** section appears after you purchase it. The addon saves each spec's choices for this character.
-3. Lock the timer window. Outside combat, click the Well Fed or Flask icon to use the item, or click a known, non-passive helpful spell to cast it on yourself. Left-click the Weapon Oil icon for your main hand and right-click it for your off hand.
-
-The food icon shows the item count. The weapon icon shows total uses across the selected oils or stones in your bags. Two oils with five charges each show **10**. Both counts are green at 21 or more, yellow at 2–20, and red at 0–1. The Flask row shows how many of the selected flask you have. To track a flask buff's duration, add its aura spell ID in `/ct tracking`.
+See the [changelog](CHANGELOG.md) for version history.
