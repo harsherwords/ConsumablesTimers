@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+- Show a color-coded bag count on the Weapon Oil icon for the selected weapon enhancement.
+
 ## 1.5.1
 
 - Detect Lesser Mana Oil and other weapon enhancements that Forever classifies as trade goods or generic consumables.

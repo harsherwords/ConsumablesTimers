@@ -269,7 +269,7 @@ function addon.Render(entries, timers, combat, showWarning, previewWarning)
             icon = entry.click.icon or icon
             alpha = row.itemCount > 0 and 1 or 0.45
         end
-        local countShown = itemID ~= nil and entry.key == "wellfed"
+        local countShown = itemID ~= nil and not entry.useOnly
         row.count:SetShown(countShown)
         if countShown then
             local count = row.itemCount
