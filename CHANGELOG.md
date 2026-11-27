@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+- Detect Lesser Mana Oil and other weapon enhancements that Forever classifies as trade goods or generic consumables.
+- Default the Weapon shortcut to **Auto** for specs with no saved choice.
+
 ## 1.5.0
 
 - Add per-spec weapon enhancements to **On-Click Settings**, with main-hand and off-hand clicks on the weapon timer icon.

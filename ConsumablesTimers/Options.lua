@@ -281,11 +281,9 @@ local function CreateConsumableDropdown(parent, spec, kind, caption, y)
         end
 
         root:SetScrollMode(260)
-        if kind ~= "weapon" then
-            local id = addon.GetAutomaticItem(kind)
-            local autoLabel = id and ("Auto - " .. addon.GetConsumableName(id)) or "Auto (highest required level)"
-            root:CreateRadio(autoLabel, IsSelected, SelectItem, "auto")
-        end
+        local id = addon.GetAutomaticItem(kind)
+        local autoLabel = id and ("Auto - " .. addon.GetConsumableName(id)) or "Auto (highest required level)"
+        root:CreateRadio(autoLabel, IsSelected, SelectItem, "auto")
         root:CreateRadio("None", IsSelected, SelectItem, "none")
         local listed = false
         for _, item in ipairs(addon.GetBagConsumables(kind)) do
@@ -309,7 +307,7 @@ local function BuildClickOptions()
     instructions:SetPoint("TOPLEFT", 8, -4)
     instructions:SetPoint("TOPRIGHT", -8, -4)
     instructions:SetJustifyH("LEFT")
-    instructions:SetText("Auto picks the food and flask with the highest Required Level you can use. Lock the timer window to click items or cast known helpful spells on yourself outside combat.")
+    instructions:SetText("Auto picks items from your bags with the highest Required Level you meet. Lock the timer window to click items or cast known helpful spells on yourself outside combat.")
 
     for spec = 1, 2 do
         local section = CreateFrame("Frame", nil, clickOptions)

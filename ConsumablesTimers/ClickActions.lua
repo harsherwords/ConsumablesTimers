@@ -3,9 +3,23 @@ local _, addon = ...
 local characterSettings
 local requestedItems = {}
 local consumableSubclasses = Enum.ItemConsumableSubclass
-local defaults = { food = "auto", flask = "auto", weapon = "none" }
+local defaults = { food = "auto", flask = "auto", weapon = "auto" }
 local bagItems = { food = {}, flask = {}, weapon = {} }
 local autoItems = {}
+
+-- Forever also classifies some of these as trade goods or generic consumables.
+local weaponEnhancements = {
+    -- Shadow Oil and Frost Oil
+    [3824] = true, [3829] = true,
+    -- Mana and wizard oils
+    [20744] = true, [20745] = true, [20746] = true, [20747] = true,
+    [20748] = true, [20749] = true, [20750] = true,
+    -- Sharpening stones
+    [2862] = true, [2863] = true, [2871] = true, [7964] = true,
+    [12404] = true, [18262] = true, [287980] = true,
+    -- Weightstones
+    [3239] = true, [3240] = true, [3241] = true, [7965] = true, [12643] = true,
+}
 
 local function IsItemChoice(kind, choice)
     return choice == "none" or (choice == "auto" and defaults[kind] == "auto") or addon.IsSpellID(choice)
@@ -88,6 +102,9 @@ function addon.IsRequestedItem(id)
 end
 
 local function GetConsumableKind(id, drinkName)
+    if weaponEnhancements[id] then
+        return "weapon"
+    end
     local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(id)
     if classID ~= Enum.ItemClass.Consumable then
         return
@@ -142,7 +159,7 @@ function addon.RefreshBagConsumables(level)
         level = 0
     end
     local changed = false
-    for _, kind in ipairs({ "food", "flask" }) do
+    for kind in pairs(defaults) do
         local best, bestLevel = nil, -1
         for _, item in ipairs(bagItems[kind]) do
             local required = item.requiredLevel
